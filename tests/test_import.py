@@ -1,10 +1,10 @@
 def test_import():
     """Test import."""
-    import pixi_py  # noqa: F401
+    import property_models  # noqa: F401
 
 
 def test_say_hellos():
     """Test using function."""
-    import pixi_py
+    import property_models
 
-    pixi_py.say_hello()
+    property_models.say_hello()
