@@ -18,8 +18,10 @@ property_models = { path = ".", editable = true }
 
 [tool.pixi.tasks]
 tests = "pytest"
+python_dir = "which python"
 
 [tool.pixi.dependencies]
 rich = ">=13.9.3,<14"
 pytest = "*"
 pre-commit = ">=4.0.1,<5"
+ipykernel = ">=6.29.5,<7"
