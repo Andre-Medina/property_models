@@ -59,7 +59,7 @@ def parse_record_type(price_info: str) -> RecordType | None:
     """
     if (match:= re.match(RECORD_TYPE_PATTERN, price_info)) is not None:
         words = match.expand( RECORD_TYPE_EXTRACTION)
-        type = RecordType.clean(words, errors="null")
+        type = RecordType.parse(words, errors="null")
     else:
         type = None
 

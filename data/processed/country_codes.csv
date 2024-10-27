@@ -1,0 +1,250 @@
+country_name,alpha-2,alpha-3,clean_name
+Afghanistan,AF,AFG,afghanistan
+Åland Islands,AX,ALA,åland_islands
+Albania,AL,ALB,albania
+Algeria,DZ,DZA,algeria
+American Samoa,AS,ASM,american_samoa
+Andorra,AD,AND,andorra
+Angola,AO,AGO,angola
+Anguilla,AI,AIA,anguilla
+Antarctica,AQ,ATA,antarctica
+Antigua and Barbuda,AG,ATG,antigua_and_barbuda
+Argentina,AR,ARG,argentina
+Armenia,AM,ARM,armenia
+Aruba,AW,ABW,aruba
+Australia,AU,AUS,australia
+Austria,AT,AUT,austria
+Azerbaijan,AZ,AZE,azerbaijan
+Bahamas,BS,BHS,bahamas
+Bahrain,BH,BHR,bahrain
+Bangladesh,BD,BGD,bangladesh
+Barbados,BB,BRB,barbados
+Belarus,BY,BLR,belarus
+Belgium,BE,BEL,belgium
+Belize,BZ,BLZ,belize
+Benin,BJ,BEN,benin
+Bermuda,BM,BMU,bermuda
+Bhutan,BT,BTN,bhutan
+"Bolivia, Plurinational State of",BO,BOL,"bolivia,_plurinational_state_of"
+"Bonaire, Sint Eustatius and Saba",BQ,BES,"bonaire,_sint_eustatius_and_saba"
+Bosnia and Herzegovina,BA,BIH,bosnia_and_herzegovina
+Botswana,BW,BWA,botswana
+Bouvet Island,BV,BVT,bouvet_island
+Brazil,BR,BRA,brazil
+British Indian Ocean Territory,IO,IOT,british_indian_ocean_territory
+Brunei Darussalam,BN,BRN,brunei_darussalam
+Bulgaria,BG,BGR,bulgaria
+Burkina Faso,BF,BFA,burkina_faso
+Burundi,BI,BDI,burundi
+Cabo Verde,CV,CPV,cabo_verde
+Cambodia,KH,KHM,cambodia
+Cameroon,CM,CMR,cameroon
+Canada,CA,CAN,canada
+Cayman Islands,KY,CYM,cayman_islands
+Central African Republic,CF,CAF,central_african_republic
+Chad,TD,TCD,chad
+Chile,CL,CHL,chile
+China,CN,CHN,china
+Christmas Island,CX,CXR,christmas_island
+Cocos (Keeling) Islands,CC,CCK,cocos_(keeling)_islands
+Colombia,CO,COL,colombia
+Comoros,KM,COM,comoros
+Congo,CG,COG,congo
+"Congo, Democratic Republic of the",CD,COD,"congo,_democratic_republic_of_the"
+Cook Islands,CK,COK,cook_islands
+Costa Rica,CR,CRI,costa_rica
+Côte d'Ivoire,CI,CIV,côte_d'ivoire
+Croatia,HR,HRV,croatia
+Cuba,CU,CUB,cuba
+Curaçao,CW,CUW,curaçao
+Cyprus,CY,CYP,cyprus
+Czechia,CZ,CZE,czechia
+Denmark,DK,DNK,denmark
+Djibouti,DJ,DJI,djibouti
+Dominica,DM,DMA,dominica
+Dominican Republic,DO,DOM,dominican_republic
+Ecuador,EC,ECU,ecuador
+Egypt,EG,EGY,egypt
+El Salvador,SV,SLV,el_salvador
+Equatorial Guinea,GQ,GNQ,equatorial_guinea
+Eritrea,ER,ERI,eritrea
+Estonia,EE,EST,estonia
+Eswatini,SZ,SWZ,eswatini
+Ethiopia,ET,ETH,ethiopia
+Falkland Islands (Malvinas),FK,FLK,falkland_islands_(malvinas)
+Faroe Islands,FO,FRO,faroe_islands
+Fiji,FJ,FJI,fiji
+Finland,FI,FIN,finland
+France,FR,FRA,france
+French Guiana,GF,GUF,french_guiana
+French Polynesia,PF,PYF,french_polynesia
+French Southern Territories,TF,ATF,french_southern_territories
+Gabon,GA,GAB,gabon
+Gambia,GM,GMB,gambia
+Georgia,GE,GEO,georgia
+Germany,DE,DEU,germany
+Ghana,GH,GHA,ghana
+Gibraltar,GI,GIB,gibraltar
+Greece,GR,GRC,greece
+Greenland,GL,GRL,greenland
+Grenada,GD,GRD,grenada
+Guadeloupe,GP,GLP,guadeloupe
+Guam,GU,GUM,guam
+Guatemala,GT,GTM,guatemala
+Guernsey,GG,GGY,guernsey
+Guinea,GN,GIN,guinea
+Guinea-Bissau,GW,GNB,guinea-bissau
+Guyana,GY,GUY,guyana
+Haiti,HT,HTI,haiti
+Heard Island and McDonald Islands,HM,HMD,heard_island_and_mcdonald_islands
+Holy See,VA,VAT,holy_see
+Honduras,HN,HND,honduras
+Hong Kong,HK,HKG,hong_kong
+Hungary,HU,HUN,hungary
+Iceland,IS,ISL,iceland
+India,IN,IND,india
+Indonesia,ID,IDN,indonesia
+"Iran, Islamic Republic of",IR,IRN,"iran,_islamic_republic_of"
+Iraq,IQ,IRQ,iraq
+Ireland,IE,IRL,ireland
+Isle of Man,IM,IMN,isle_of_man
+Israel,IL,ISR,israel
+Italy,IT,ITA,italy
+Jamaica,JM,JAM,jamaica
+Japan,JP,JPN,japan
+Jersey,JE,JEY,jersey
+Jordan,JO,JOR,jordan
+Kazakhstan,KZ,KAZ,kazakhstan
+Kenya,KE,KEN,kenya
+Kiribati,KI,KIR,kiribati
+"Korea, Democratic People's Republic of",KP,PRK,"korea,_democratic_people's_republic_of"
+"Korea, Republic of",KR,KOR,"korea,_republic_of"
+Kuwait,KW,KWT,kuwait
+Kyrgyzstan,KG,KGZ,kyrgyzstan
+Lao People's Democratic Republic,LA,LAO,lao_people's_democratic_republic
+Latvia,LV,LVA,latvia
+Lebanon,LB,LBN,lebanon
+Lesotho,LS,LSO,lesotho
+Liberia,LR,LBR,liberia
+Libya,LY,LBY,libya
+Liechtenstein,LI,LIE,liechtenstein
+Lithuania,LT,LTU,lithuania
+Luxembourg,LU,LUX,luxembourg
+Macao,MO,MAC,macao
+Madagascar,MG,MDG,madagascar
+Malawi,MW,MWI,malawi
+Malaysia,MY,MYS,malaysia
+Maldives,MV,MDV,maldives
+Mali,ML,MLI,mali
+Malta,MT,MLT,malta
+Marshall Islands,MH,MHL,marshall_islands
+Martinique,MQ,MTQ,martinique
+Mauritania,MR,MRT,mauritania
+Mauritius,MU,MUS,mauritius
+Mayotte,YT,MYT,mayotte
+Mexico,MX,MEX,mexico
+"Micronesia, Federated States of",FM,FSM,"micronesia,_federated_states_of"
+"Moldova, Republic of",MD,MDA,"moldova,_republic_of"
+Monaco,MC,MCO,monaco
+Mongolia,MN,MNG,mongolia
+Montenegro,ME,MNE,montenegro
+Montserrat,MS,MSR,montserrat
+Morocco,MA,MAR,morocco
+Mozambique,MZ,MOZ,mozambique
+Myanmar,MM,MMR,myanmar
+Namibia,NA,NAM,namibia
+Nauru,NR,NRU,nauru
+Nepal,NP,NPL,nepal
+"Netherlands, Kingdom of the",NL,NLD,"netherlands,_kingdom_of_the"
+New Caledonia,NC,NCL,new_caledonia
+New Zealand,NZ,NZL,new_zealand
+Nicaragua,NI,NIC,nicaragua
+Niger,NE,NER,niger
+Nigeria,NG,NGA,nigeria
+Niue,NU,NIU,niue
+Norfolk Island,NF,NFK,norfolk_island
+North Macedonia,MK,MKD,north_macedonia
+Northern Mariana Islands,MP,MNP,northern_mariana_islands
+Norway,NO,NOR,norway
+Oman,OM,OMN,oman
+Pakistan,PK,PAK,pakistan
+Palau,PW,PLW,palau
+"Palestine, State of",PS,PSE,"palestine,_state_of"
+Panama,PA,PAN,panama
+Papua New Guinea,PG,PNG,papua_new_guinea
+Paraguay,PY,PRY,paraguay
+Peru,PE,PER,peru
+Philippines,PH,PHL,philippines
+Pitcairn,PN,PCN,pitcairn
+Poland,PL,POL,poland
+Portugal,PT,PRT,portugal
+Puerto Rico,PR,PRI,puerto_rico
+Qatar,QA,QAT,qatar
+Réunion,RE,REU,réunion
+Romania,RO,ROU,romania
+Russian Federation,RU,RUS,russian_federation
+Rwanda,RW,RWA,rwanda
+Saint Barthélemy,BL,BLM,saint_barthélemy
+"Saint Helena, Ascension and Tristan da Cunha",SH,SHN,"saint_helena,_ascension_and_tristan_da_cunha"
+Saint Kitts and Nevis,KN,KNA,saint_kitts_and_nevis
+Saint Lucia,LC,LCA,saint_lucia
+Saint Martin (French part),MF,MAF,saint_martin_(french_part)
+Saint Pierre and Miquelon,PM,SPM,saint_pierre_and_miquelon
+Saint Vincent and the Grenadines,VC,VCT,saint_vincent_and_the_grenadines
+Samoa,WS,WSM,samoa
+San Marino,SM,SMR,san_marino
+Sao Tome and Principe,ST,STP,sao_tome_and_principe
+Saudi Arabia,SA,SAU,saudi_arabia
+Senegal,SN,SEN,senegal
+Serbia,RS,SRB,serbia
+Seychelles,SC,SYC,seychelles
+Sierra Leone,SL,SLE,sierra_leone
+Singapore,SG,SGP,singapore
+Sint Maarten (Dutch part),SX,SXM,sint_maarten_(dutch_part)
+Slovakia,SK,SVK,slovakia
+Slovenia,SI,SVN,slovenia
+Solomon Islands,SB,SLB,solomon_islands
+Somalia,SO,SOM,somalia
+South Africa,ZA,ZAF,south_africa
+South Georgia and the South Sandwich Islands,GS,SGS,south_georgia_and_the_south_sandwich_islands
+South Sudan,SS,SSD,south_sudan
+Spain,ES,ESP,spain
+Sri Lanka,LK,LKA,sri_lanka
+Sudan,SD,SDN,sudan
+Suriname,SR,SUR,suriname
+Svalbard and Jan Mayen,SJ,SJM,svalbard_and_jan_mayen
+Sweden,SE,SWE,sweden
+Switzerland,CH,CHE,switzerland
+Syrian Arab Republic,SY,SYR,syrian_arab_republic
+"Taiwan, Province of China",TW,TWN,"taiwan,_province_of_china"
+Tajikistan,TJ,TJK,tajikistan
+"Tanzania, United Republic of",TZ,TZA,"tanzania,_united_republic_of"
+Thailand,TH,THA,thailand
+Timor-Leste,TL,TLS,timor-leste
+Togo,TG,TGO,togo
+Tokelau,TK,TKL,tokelau
+Tonga,TO,TON,tonga
+Trinidad and Tobago,TT,TTO,trinidad_and_tobago
+Tunisia,TN,TUN,tunisia
+Türkiye,TR,TUR,türkiye
+Turkmenistan,TM,TKM,turkmenistan
+Turks and Caicos Islands,TC,TCA,turks_and_caicos_islands
+Tuvalu,TV,TUV,tuvalu
+Uganda,UG,UGA,uganda
+Ukraine,UA,UKR,ukraine
+United Arab Emirates,AE,ARE,united_arab_emirates
+United Kingdom of Great Britain and Northern Ireland,GB,GBR,united_kingdom_of_great_britain_and_northern_ireland
+United States of America,US,USA,united_states_of_america
+United States Minor Outlying Islands,UM,UMI,united_states_minor_outlying_islands
+Uruguay,UY,URY,uruguay
+Uzbekistan,UZ,UZB,uzbekistan
+Vanuatu,VU,VUT,vanuatu
+"Venezuela, Bolivarian Republic of",VE,VEN,"venezuela,_bolivarian_republic_of"
+Viet Nam,VN,VNM,viet_nam
+Virgin Islands (British),VG,VGB,virgin_islands_(british)
+Virgin Islands (U.S.),VI,VIR,virgin_islands_(u.s.)
+Wallis and Futuna,WF,WLF,wallis_and_futuna
+Western Sahara,EH,ESH,western_sahara
+Yemen,YE,YEM,yemen
+Zambia,ZM,ZMB,zambia
+Zimbabwe,ZW,ZWE,zimbabwe
