@@ -3,7 +3,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 
 
-def extract_info(listing):
+def extract_info(listing: WebElement):
+    """Extracts raw information from a single listing for old_listings.
+
+    TODO: Fill in further with example output.
+    """
     address = ""
     try:
         information_list = listing.find_element(By.TAG_NAME, "section").find_elements(By.TAG_NAME, "section")
@@ -20,7 +24,8 @@ def extract_info(listing):
 
         return extracted_data
 
-    except:
+    except:  # noqa: E722
+        # TODO: deal with exceptions
         print(address, "FAILED")
 
 

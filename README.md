@@ -36,7 +36,7 @@ pixi run tests
    |- suburb_to_postcode.csv
    |- state
     |- suburb
-     |- records.csv 
+     |- records.csv
      |- properties.json
 ```
 

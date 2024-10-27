@@ -2538,7 +2538,7 @@ packages:
   name: property-models
   version: 0.1.0
   path: .
-  sha256: 50f1b7bb3e527fae34724c9cbe62fce2942eddb764964eeb71f1643f3be56541
+  sha256: 425b5218c5be4139f094e65f2a214c7979721c49b88d2cd989e7b95eadf1342a
   requires_dist:
   - au-address-parser>=1.0.0,<2
   requires_python: '>=3.11'

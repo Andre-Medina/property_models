@@ -1,4 +1,5 @@
 import re
+
 from property_models.constants import RecordType
 
 PRICE_PATTERN_SINGLE = r"^\$([\,\.\d]+)(\s[^\-]+|$)"
@@ -13,10 +14,10 @@ RECORD_TYPE_EXTRACTION = r"\2"
 
 
 def parse_price(price_info: str) -> float | None:
-    """Takes a price in
+    """Takes a price as a string in and outputs a float.
 
     E.g.
-    ```    
+    ```
     Auction => None
     Contact => None
     $415,000 => 415000.0
@@ -26,25 +27,22 @@ def parse_price(price_info: str) -> float | None:
     $480,000 - $520,000 Auction => 500000.0
     ```
     """
-    if (match:= re.match(PRICE_PATTERN_SINGLE, price_info)) is not None:
-        price = float(match.expand(PRICE_EXTRACTION_SINGLE).replace(",",""))
+    if (match := re.match(PRICE_PATTERN_SINGLE, price_info)) is not None:
+        price = float(match.expand(PRICE_EXTRACTION_SINGLE).replace(",", ""))
 
-    elif (match:= re.match(PRICE_PATTERN_RANGE, price_info)) is not None:
-        lower_price = float(match.expand(PRICE_EXTRACTION_RANGE_LOWER).replace(",",""))
-        upper_price = float(match.expand(price_extraction_range_upper).replace(",",""))
+    elif (match := re.match(PRICE_PATTERN_RANGE, price_info)) is not None:
+        lower_price = float(match.expand(PRICE_EXTRACTION_RANGE_LOWER).replace(",", ""))
+        upper_price = float(match.expand(price_extraction_range_upper).replace(",", ""))
         price = (lower_price + upper_price) * 0.5
     else:
         price = None
-    
+
     return price
-
-
-
 
 
 def parse_record_type(price_info: str) -> RecordType | None:
     """Takes the price information and extracts the type of the record.
-    
+
     E.g.
     ```
     Auction  :  RecordType.AUCTION
@@ -57,11 +55,10 @@ def parse_record_type(price_info: str) -> RecordType | None:
     $320,000 - $350,000 Auction  :  RecordType.AUCTION
     ```
     """
-    if (match:= re.match(RECORD_TYPE_PATTERN, price_info)) is not None:
-        words = match.expand( RECORD_TYPE_EXTRACTION)
+    if (match := re.match(RECORD_TYPE_PATTERN, price_info)) is not None:
+        words = match.expand(RECORD_TYPE_EXTRACTION)
         type = RecordType.parse(words, errors="null")
     else:
         type = None
 
     return type
-
