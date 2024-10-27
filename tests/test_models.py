@@ -1,5 +1,8 @@
+import tempfile
 from datetime import date
 
+import polars as pl
+import polars.testing
 import pytest
 
 from property_models.constants import PropertyCondition, PropertyType, RecordType
@@ -67,20 +70,103 @@ def test_address_parsing(_name, address, country, correct_json):
 
 
 @pytest.mark.parametrize(
-    "_name, record_type, address, price",
+    "_name, record_type, address, price, date",
     [
-        ("Basic construction, ", RecordType.AUCTION, ("80 FIFTH STREET, ASCOT VALE, VIC 3032", "australia"), 100000),
-        ("Null price, ", RecordType.ENQUIRY, ("80 SAMPLE STREET, ASCOT VALE, VIC 3032", "australia"), None),
-        ("string record, ", " NO Sale", ("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", "australia"), 200000),
+        (
+            "Basic construction, ",
+            RecordType.AUCTION,
+            ("80 FIFTH STREET, ASCOT VALE, VIC 3032", "australia"),
+            100000,
+            date(2020, 1, 1),
+        ),
+        (
+            "Null price, ",
+            RecordType.ENQUIRY,
+            ("80 SAMPLE STREET, ASCOT VALE, VIC 3032", "australia"),
+            None,
+            date(2020, 1, 1),
+        ),
+        (
+            "string record, ",
+            " NO Sale",
+            ("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", "australia"),
+            200000,
+            date(2020, 1, 1),
+        ),
     ],
 )
-def test_historical_price_init(_name, record_type, address, price):
+def test_historical_price_init(_name, record_type, address, price, date):
     """Test HistoricalPrice class can be initialized."""
     HistoricalPrice(
         record_type=RecordType.parse(record_type) if isinstance(record_type, str) else record_type,
         address=Address.parse(address[0], country=address[1]),
         price=price,
+        date=date,
     )
+
+
+def test_historical_price_read_csv():
+    """Create csv contents and make sure the read function works."""
+    records_csv = b"""\
+    unit_number,street_number,street_name,date,record_type,price
+    ,1,STEELE STREET,2020-01-01,auction,1000000
+    10,31,LONG ROAD,2020-10-01,no_sale,500000
+    ,31,BROAD WAY,2025-12-01,private_sale,5000000
+    """
+
+    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+        temp_file.write(records_csv)
+        temp_file.seek(0)
+        data_csv = HistoricalPrice.read_csv(records_csv)
+
+    records_json = {
+        "unit_number": [None, 10, None, None],
+        "street_number": [1, 31, 31, None],
+        "street_name": ["STEELE STREET", "LONG ROAD", "BROAD WAY", None],
+        "date": [date(2020, 1, 1), date(2020, 10, 1), date(2025, 12, 1), None],
+        "record_type": ["auction", "no_sale", "private_sale", None],
+        "price": [1000000, 500000, 5000000, None],
+    }
+    data_json = pl.DataFrame(records_json)
+
+    pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
+
+
+def test_historical_price_to_records():
+    """Takes a list of historical prices and converts them to a df."""
+    historical_prices = [
+        HistoricalPrice(
+            date=date(2020, 1, 1),
+            record_type=RecordType.parse(RecordType.AUCTION),
+            address=Address.parse("80 FIFTH STREET, ASCOT VALE, VIC 3032", country="australia"),
+            price=100000,
+        ),
+        HistoricalPrice(
+            date=date(2020, 1, 1),
+            record_type=RecordType.parse(RecordType.ENQUIRY),
+            address=Address.parse("80 SAMPLE STREET, ASCOT VALE, VIC 3032", country="australia"),
+            price=None,
+        ),
+        HistoricalPrice(
+            date=date(2020, 1, 1),
+            record_type=RecordType.parse(" NO Sale"),
+            address=Address.parse("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", country="australia"),
+            price=200000,
+        ),
+    ]
+    historical_records = HistoricalPrice.to_records(historical_prices)
+    records_json = {
+        "unit_number": [None, None, None],
+        "street_number": [80, 80, 80],
+        "street_name": ["FIFTH STREET", "SAMPLE STREET", "ROSEBERRY STREET"],
+        "date": [date(2020, 1, 1), date(2020, 1, 1), date(2020, 1, 1)],
+        "record_type": ["auction", "enquiry", "no_sale"],
+        "price": [100000, None, 200000],
+    }
+
+    data_json = pl.DataFrame(records_json)
+
+    pl.testing.assert_frame_equal(historical_records, data_json, check_dtypes=False)
 
 
 ##### PROPERTY INFO ############

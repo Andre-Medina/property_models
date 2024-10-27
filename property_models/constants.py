@@ -1,7 +1,33 @@
+import os
 from abc import abstractmethod
 from contextlib import suppress
 from enum import Enum
 from typing import Literal
+
+import polars as pl
+
+DATA_DIR: str = None
+
+if (DATA_DIR := os.environ.get("DATA_DIR")) is None:
+    current_dir = os.getcwd()
+    root_dir = current_dir.rsplit("/property_models", maxsplit=1)[0]
+    DATA_DIR = f"{root_dir}/property_models/data"
+
+POSTCODE_CSV_FILE: str = DATA_DIR + "/processed/{country}/suburb_to_postcode.csv"
+HISTORICAL_RECORDS_CSV_FILE: str = DATA_DIR + "/processed/{country}/{state}/{suburb}/records.csv"
+PROPERTIES_INFO_JSON_FILE: str = DATA_DIR + "/processed/{country}/{state}/{suburb}/properties.json"
+
+
+####### SCHEMAS #######
+
+HISTORICAL_RECORDS_SCHEMA = {
+    "unit_number": pl.UInt16,
+    "street_number": pl.UInt16,
+    "street_name": pl.String,
+    "date": pl.Date,
+    "record_type": str,
+    "price": pl.UInt32,
+}
 
 ####### RECORD TYPE ################
 

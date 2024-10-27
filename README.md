@@ -48,9 +48,9 @@ pixi run tests
 
 #### records.csv
 
-|flat_number|street_number|date|record_type|price|
-|-|-|-|-|-|
-|int (nullable)|int|date|RecordType (str)| int|
+|unit_number|street_number|street_name|date|record_type|price|
+|-|-|-|-|-|-|
+|int (nullable)|int|str|date|RecordType (str)| int|
 
 #### properties.json
 
@@ -58,7 +58,7 @@ pixi run tests
 [
     {
         address: {
-            flat_number: int
+            unit_number: int
             street_number: int
             ...
         },

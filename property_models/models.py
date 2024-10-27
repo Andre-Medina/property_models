@@ -1,10 +1,18 @@
 from datetime import date
 from typing import Literal
 
+import polars as pl
 from au_address_parser import AbAddressUtility
 from pydantic import BaseModel, ConfigDict
 
-from property_models.constants import PropertyCondition, PropertyType, RecordType
+from property_models.constants import (
+    HISTORICAL_RECORDS_CSV_FILE,
+    HISTORICAL_RECORDS_SCHEMA,
+    # PROPERTIES_INFO_JSON_FILE,
+    PropertyCondition,
+    PropertyType,
+    RecordType,
+)
 
 ALLOWED_COUNTRIES = Literal["australia"]
 
@@ -55,7 +63,55 @@ class HistoricalPrice(BaseModel):
 
     record_type: RecordType
     address: Address
+    date: date
     price: int | None
+
+    @classmethod
+    def read_location(cls, *, country: str, state: str, suburb: str) -> pl.DataFrame:
+        """Read historical records for a specific physical location."""
+        historical_records_file = HISTORICAL_RECORDS_CSV_FILE.format(
+            country=country,
+            state=state,
+            suburb=suburb,
+        )
+        historical_records = cls.read_csv(historical_records_file)
+        return historical_records
+
+    @classmethod
+    def read_csv(_cls, file: str, /) -> pl.DataFrame:
+        """Read and validate contents of file containing several records."""
+        historical_records = pl.read_csv(
+            file,
+            schema_overrides=HISTORICAL_RECORDS_SCHEMA,
+        )
+
+        (
+            historical_records.with_columns(
+                pl.col("record_type").map_elements(
+                    lambda record_type: RecordType.parse(record_type, errors="null"), return_dtype=pl.String
+                )
+            )
+        )
+
+        return historical_records
+
+    @classmethod
+    def to_records(cls, historical_prices: list["HistoricalPrice"], /) -> pl.DataFrame:
+        """Convert list of historical prices to a dataframe."""
+        historical_records = (
+            pl.DataFrame(historical_prices)
+            .select(
+                pl.col("address").struct["unit_number"],
+                pl.col("address").struct["street_number"],
+                pl.col("address").struct["street_name"],
+                pl.col("date"),
+                pl.col("record_type"),
+                pl.col("price"),
+            )
+            .cast(HISTORICAL_RECORDS_SCHEMA)
+        )
+
+        return historical_records
 
 
 class PropertyInfo(BaseModel):

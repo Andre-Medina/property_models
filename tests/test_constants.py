@@ -1,6 +1,50 @@
+import os
+
 import pytest
 
-from property_models.constants import PropertyType, RecordType
+from property_models.constants import (
+    DATA_DIR,
+    HISTORICAL_RECORDS_CSV_FILE,
+    POSTCODE_CSV_FILE,
+    PROPERTIES_INFO_JSON_FILE,
+    PropertyType,
+    RecordType,
+)
+
+
+def test_data_dir():
+    """Assert data dir exists."""
+    assert os.path.isdir(DATA_DIR)
+
+
+def test_postcodes_template_format():
+    """Asserts you can format the template correctly."""
+    file_path = POSTCODE_CSV_FILE.format(
+        country="test_country",
+        # state = "test_state",
+        # suburb = "test_suburb",
+    )
+    assert file_path
+
+
+def test_historical_records_template_format():
+    """Asserts you can format template correctly."""
+    file_path = HISTORICAL_RECORDS_CSV_FILE.format(
+        country="test_country",
+        state="test_state",
+        suburb="test_suburb",
+    )
+    assert file_path
+
+
+def test_properties_info_template_format():
+    """Asserts you can format template correctly."""
+    file_path = PROPERTIES_INFO_JSON_FILE.format(
+        country="test_country",
+        state="test_state",
+        suburb="test_suburb",
+    )
+    assert file_path
 
 
 def test_record_type_clean():
