@@ -2,6 +2,7 @@ import os
 from abc import abstractmethod
 from contextlib import suppress
 from enum import Enum
+from functools import lru_cache
 from typing import Literal
 
 import polars as pl
@@ -89,18 +90,19 @@ class RecordType(str, Enum):
 ####### PROPERTY TYPE ################
 
 
-class MetaPropertyType(str, Enum):
+class SubPropertyType(str, Enum):
     """MetaClothes class."""
 
     _name: str
 
     @property
-    def value(self) -> tuple[str, str | None]:
+    def value(self) -> "PropertyType":
         """Redefine `enum.value` to add parent type."""
         parent_value = self.__class__._name()
         child_value = getattr(self, "_value_", None)
         child_value = None if child_value == "None" else child_value
-        return parent_value, child_value
+        value_as_object = PropertyType((parent_value, child_value))
+        return value_as_object
 
     @classmethod
     @abstractmethod
@@ -109,10 +111,10 @@ class MetaPropertyType(str, Enum):
         pass
 
 
-class PropertyTypeLand(MetaPropertyType):
+class PropertyTypeLand(SubPropertyType):
     """Sub Enum for empty lots of land."""
 
-    GENERAL = None
+    GENERAL = "None"
     NEW_BUILD = "new_build"
     OLD_LAND = "old_land"
     DEMOLITION = "demolition"
@@ -123,10 +125,10 @@ class PropertyTypeLand(MetaPropertyType):
         return "land"
 
 
-class PropertyTypeHouse(MetaPropertyType):
+class PropertyTypeHouse(SubPropertyType):
     """Sub enum for free standing houses."""
 
-    GENERAL = None
+    GENERAL = "None"
     VICTORIAN = "victorian"
     WEATHER_BOARD = "weather_board"
     MODERN = "modern"
@@ -138,10 +140,10 @@ class PropertyTypeHouse(MetaPropertyType):
         return "free_standing_house"
 
 
-class PropertyTypeTownHouse(MetaPropertyType):
+class PropertyTypeTownHouse(SubPropertyType):
     """Sub Enum for different town house sub classes."""
 
-    GENERAL = None
+    GENERAL = "None"
     VICTORIAN = "victorian"
     MODERN = "modern"
 
@@ -151,10 +153,10 @@ class PropertyTypeTownHouse(MetaPropertyType):
         return "town_house"
 
 
-class PropertyTypeApartment(MetaPropertyType):
+class PropertyTypeApartment(SubPropertyType):
     """Sub enum for different apartment sub classes."""
 
-    GENERAL = None
+    GENERAL = "None"
 
     SIXTIES_BRICK = "sixties_brick"
     MODERN = "modern"
@@ -166,13 +168,37 @@ class PropertyTypeApartment(MetaPropertyType):
         return "apartment"
 
 
-class PropertyType(tuple[str, str | None]):
+class PropertyType(tuple[str, str]):
     """Enum to hold different property types."""
 
     LAND = PropertyTypeLand
     FREE_STANDING_HOUSE = PropertyTypeHouse
     TOWN_HOUSE = PropertyTypeTownHouse
     APARTMENT = PropertyTypeApartment
+
+    def __init__(self, values: tuple[str, str | None]):
+        """Create a PropertyType enum."""
+        self.tuple_to_enum(values)
+
+    def tuple_to_enum(cls, values: tuple[str, str | None]) -> "SubPropertyType":
+        """Take a tuple, validate it, and pass the corrected enum."""
+        try:
+            sub_enum = cls._sub_enum_lookup()[values[0]]
+            chosen_enum = sub_enum(values[1] or "None")
+            return chosen_enum
+        except (KeyError, ValueError) as exc:
+            exc.add_note(f"Unknown enum values {values!r}.")
+            raise exc
+
+    @classmethod
+    @lru_cache
+    def _sub_enum_lookup(cls) -> dict[str, SubPropertyType]:
+        sub_enum_lookup = {
+            sub_enum_class._name(): sub_enum_class
+            for _sub_enum_name, sub_enum_class in cls.__dict__.items()
+            if isinstance(sub_enum_class, Enum.__class__)
+        }
+        return sub_enum_lookup
 
     @classmethod
     def parse(cls, property_type: str, *, errors: Literal["raise", "coerce", "null"] = "raise") -> "PropertyType":  # noqa: ARG003
@@ -194,7 +220,7 @@ class PropertyType(tuple[str, str | None]):
         NotImplementedError, If called with un implemented parameters.
         """
         try:
-            parsed = cls(property_type)
+            parsed = cls(property_type.value)
             return parsed
         except Exception:  # noqa: B904
             raise NotImplementedError  # noqa: B904

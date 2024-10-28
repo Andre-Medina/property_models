@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from pydantic import BaseModel, ConfigDict, ValidationError
 
 from property_models.constants import (
     DATA_DIR,
@@ -63,10 +64,48 @@ def test_record_type_clean():
         RecordType.parse("AUUUUUCTION", errors="coerce")
 
 
-def test_property_type_meta():
-    """Testing `MetaPropertyType` works as intended."""
+#### PROPERTY TYPE ######
+
+
+def test_property_type_sub():
+    """Testing `SubPropertyType` works as intended."""
     assert PropertyType.APARTMENT.SIXTIES_BRICK.value == ("apartment", "sixties_brick")
     assert PropertyType.APARTMENT.GENERAL.value == ("apartment", None)
     assert PropertyType.FREE_STANDING_HOUSE.MODERN.value == ("free_standing_house", "modern")
     assert PropertyType.LAND.NEW_BUILD.value == ("land", "new_build")
     assert PropertyType.TOWN_HOUSE.VICTORIAN.value == ("town_house", "victorian")
+
+
+def test_property_type_validation():
+    """Test the validation of PropertyType works."""
+    PropertyType(("apartment", "sixties_brick"))
+    PropertyType(("apartment", None))
+
+    with pytest.raises(KeyError):
+        PropertyType(("a", "sixties_brick"))
+    with pytest.raises(ValueError):
+        PropertyType(("apartment", "this is nothing"))
+
+
+def test_property_type_sub_class_class():
+    """Test the class of property type sub classes."""
+    assert type(PropertyType.APARTMENT.SIXTIES_BRICK.value) is PropertyType
+
+
+def test_property_type_pydantic():
+    """Test PropertyType can be used as a pydantic model."""
+
+    class TestModel(BaseModel):
+        """Model to hold the general information about a property."""
+
+        property_type: PropertyType
+
+        model_config = ConfigDict({"arbitrary_types_allowed": True})
+
+    TestModel(property_type=PropertyType.APARTMENT.SIXTIES_BRICK.value)
+    TestModel(property_type=PropertyType.LAND.NEW_BUILD.value)
+    TestModel(property_type=PropertyType.LAND.GENERAL.value)
+
+    TestModel(property_type=PropertyType(("land", "new_build")))
+    with pytest.raises(ValidationError):
+        TestModel(property_type=("land", "new_build"))

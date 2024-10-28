@@ -17,6 +17,7 @@ from property_models.constants import (
 ALLOWED_COUNTRIES = Literal["australia"]
 
 
+####### ADDRESSES ########################
 class Address(BaseModel):
     """Dataclass to hold information about a single physical address location."""
 
@@ -58,6 +59,7 @@ class Address(BaseModel):
         return address_object
 
 
+########## HISTORICAL PRICES ###############
 class HistoricalPrice(BaseModel):
     """Model to organise historical prices."""
 
@@ -114,6 +116,7 @@ class HistoricalPrice(BaseModel):
         return historical_records
 
 
+##### PROPERTY INFO ################
 class PropertyInfo(BaseModel):
     """Model to hold the general information about a property."""
 
