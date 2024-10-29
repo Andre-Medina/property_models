@@ -122,9 +122,9 @@ class PropertyInfo(BaseModel):
 
     address: Address
 
-    bed: int | None
-    bath: int | None
-    car: int | None
+    beds: int | None
+    baths: int | None
+    cars: int | None
 
     property_size_m2: float | None
     land_size_m2: float | None
@@ -133,6 +133,43 @@ class PropertyInfo(BaseModel):
 
     property_type: PropertyType | None
     date_of_construction: date | None
-    floor_count: int | None
+    floors: int | None
 
     model_config = ConfigDict({"arbitrary_types_allowed": True})
+
+    @classmethod
+    def from_stringified_dict(cls, stringified_dict: dict, /) -> "PropertyInfo":
+        """Takes a dictionary of stringified parameters and returns a created object.
+
+        e.g.
+        ```
+        PropertyInfo.from_stringified_dict({
+            'address': {
+                'unit_number': None,
+                'street_number': 80,
+                'street_name': 'ROSEBERRY STREET',
+                'suburb': 'NORTH MELBOURNE',
+                'post_code': 3032,
+                'state': 'VIC',
+                'country': 'australia',
+            },
+            'beds': 10,
+            'baths': 10,
+            'cars': 10,
+            'property_size_m2': 304.4,
+            'land_size_m2': 100.3,
+            'condition': None,
+            'property_type': ['apartment', 'sixties_brick'],
+            'date_of_construction': '2000-01-01',
+            'floors': 10}
+        )
+        ```
+        """
+        property_info_reloaded = cls(
+            address=Address(**stringified_dict.pop("address")),
+            property_type=PropertyType(stringified_dict.pop("property_type")),
+            date_of_construction=date.fromisoformat(stringified_dict.pop("date_of_construction")),
+            **stringified_dict,
+        )
+
+        return property_info_reloaded

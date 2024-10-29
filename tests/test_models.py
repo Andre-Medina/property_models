@@ -1,3 +1,4 @@
+import json
 import tempfile
 from datetime import date
 
@@ -212,11 +213,41 @@ def test_property_type_init(_name, property_type, address, condition, count, dat
         condition=PropertyCondition.parse(condition)
         if condition is not None and isinstance(condition, str)
         else condition,
-        bed=count,
-        car=count,
-        bath=count,
-        floor_count=count,
+        beds=count,
+        cars=count,
+        baths=count,
+        floors=count,
         land_size_m2=size,
         property_size_m2=size,
         date_of_construction=date,
     )
+
+
+def test_property_type_from_stringified_dict():
+    """Test `from_stringified_dict` method."""
+    property_info_original = PropertyInfo(
+        property_type=PropertyType.parse(PropertyType.APARTMENT.SIXTIES_BRICK),
+        address=Address.parse("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", country="australia"),
+        condition=None,
+        beds=10,
+        cars=10,
+        baths=10,
+        floors=10,
+        land_size_m2=100.3,
+        property_size_m2=304.4,
+        date_of_construction=date(2000, 1, 1),
+    )
+
+    # Simulate dumping contents to text file
+    data_json = property_info_original.model_dump()
+    data_string = json.dumps(data_json, default=str)
+
+    # Read data normally
+    data_loaded = json.loads(data_string)
+    property_info_reloaded = PropertyInfo.from_stringified_dict(data_loaded)
+    assert property_info_original == property_info_reloaded
+
+    # Read bad data
+    data_loaded = json.loads(data_string)
+    bad_property_info_reloaded = PropertyInfo.from_stringified_dict(data_loaded | {"beds": None})
+    assert property_info_original != bad_property_info_reloaded
