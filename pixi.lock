@@ -162,6 +162,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/tk-8.6.13-noxft_h4845f30_101.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tomli-2.0.2-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/tornado-6.4.1-py312h66e93f0_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/tqdm-4.66.6-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/traitlets-5.14.3-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/trio-0.27.0-py312h7900ff3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/trio-websocket-0.11.1-pyhd8ed1ab_0.conda
@@ -2538,7 +2539,7 @@ packages:
   name: property-models
   version: 0.1.0
   path: .
-  sha256: 425b5218c5be4139f094e65f2a214c7979721c49b88d2cd989e7b95eadf1342a
+  sha256: 4d5183fe22b8e32461333900d4db21ed8abd9f7e12dea157a43e77c3ea10e6f8
   requires_dist:
   - au-address-parser>=1.0.0,<2
   requires_python: '>=3.11'
@@ -3140,6 +3141,23 @@ packages:
   - pkg:pypi/tornado?source=hash-mapping
   size: 837665
   timestamp: 1724956252424
+- kind: conda
+  name: tqdm
+  version: 4.66.6
+  build: pyhd8ed1ab_0
+  subdir: noarch
+  noarch: python
+  url: https://conda.anaconda.org/conda-forge/noarch/tqdm-4.66.6-pyhd8ed1ab_0.conda
+  sha256: 32c39424090a8cafe7994891a816580b3bd253eb4d4f5473bdefcf6a81ebc061
+  md5: 92718e1f892e1e4623dcc59b9f9c4e55
+  depends:
+  - colorama
+  - python >=3.7
+  license: MPL-2.0 or MIT
+  purls:
+  - pkg:pypi/tqdm?source=hash-mapping
+  size: 89367
+  timestamp: 1730145312554
 - kind: conda
   name: traitlets
   version: 5.14.3

@@ -21,14 +21,43 @@ PROPERTIES_INFO_JSON_FILE: str = DATA_DIR + "/processed/{country}/{state}/{subur
 
 ####### SCHEMAS #######
 
-HISTORICAL_RECORDS_SCHEMA = {
-    "unit_number": pl.UInt16,
-    "street_number": pl.UInt16,
-    "street_name": pl.String,
-    "date": pl.Date,
-    "record_type": str,
-    "price": pl.UInt32,
-}
+HISTORICAL_RECORDS_SCHEMA = pl.Schema(
+    {
+        "unit_number": pl.UInt16,
+        "street_number": pl.UInt16,
+        "street_name": pl.String,
+        "date": pl.Date,
+        "record_type": str,
+        "price": pl.UInt32,
+    }
+)
+
+ADDRESS_SCHEMA = pl.Schema(
+    {
+        "unit_number": pl.UInt16,
+        "street_number": pl.UInt16,
+        "street_name": pl.String,
+        "suburb": pl.String,
+        "post_code": pl.UInt16,
+        "state": pl.String,
+        "country": pl.String,
+    }
+)
+
+PROPERTIES_INFO_SCHEMA = pl.Schema(
+    {
+        "address": pl.Struct(ADDRESS_SCHEMA),
+        "beds": pl.UInt8,
+        "baths": pl.UInt8,
+        "cars": pl.UInt8,
+        "property_size_m2": pl.Float32,
+        "land_size_m2": pl.Float32,
+        "condition": pl.String,
+        "property_type": pl.List(pl.String),
+        "construction_date": pl.Date(),
+        "floors": pl.UInt8,
+    }
+)
 
 ####### RECORD TYPE ################
 

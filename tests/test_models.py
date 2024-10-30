@@ -219,7 +219,7 @@ def test_property_type_init(_name, property_type, address, condition, count, dat
         floors=count,
         land_size_m2=size,
         property_size_m2=size,
-        date_of_construction=date,
+        construction_date=date,
     )
 
 
@@ -235,7 +235,7 @@ def test_property_type_from_stringified_dict():
         floors=10,
         land_size_m2=100.3,
         property_size_m2=304.4,
-        date_of_construction=date(2000, 1, 1),
+        construction_date=date(2000, 1, 1),
     )
 
     # Simulate dumping contents to text file
@@ -251,3 +251,74 @@ def test_property_type_from_stringified_dict():
     data_loaded = json.loads(data_string)
     bad_property_info_reloaded = PropertyInfo.from_stringified_dict(data_loaded | {"beds": None})
     assert property_info_original != bad_property_info_reloaded
+
+
+def test_properties_info_read_csv():
+    """Create csv contents and make sure the read function works."""
+    # noqa: E501
+    properties_info_json_file = b"""[
+    {"address": {"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
+    "suburb": "NORTH MELBOURNE", "post_code": 3032, "state": "VIC", "country": "australia"},
+    "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
+    "condition": null, "property_type": ["apartment", "sixties_brick"],
+    "construction_date": "2000-01-01", "floors": 10},
+    {"address": {"unit_number": 22, "street_number": 42, "street_name": "FDF STREET",
+    "suburb": "WEST MELBOURNE", "post_code": 3032, "state": "VIC", "country": "australia"},
+    "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
+    "condition": null, "property_type": ["apartment", "sixties_brick"],
+    "construction_date": "2000-01-01", "floors": 1000},
+    {"address": {"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
+    "suburb": "NORTH MELBOURNE", "post_code": 3032, "state": "VIC", "country": "australia"},
+    "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
+    "condition": null, "property_type": ["apartment", "None"],
+    "construction_date": null, "floors": 100}
+    ]"""
+
+    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+        temp_file.write(properties_info_json_file)
+        temp_file.seek(0)
+        data_read = PropertyInfo.read_json(temp_file)
+
+    properties_info_json = {
+        "address": [
+            {
+                "unit_number": None,
+                "street_number": 80,
+                "street_name": "ROSEBERRY STREET",
+                "suburb": "NORTH MELBOURNE",
+                "post_code": 3032,
+                "state": "VIC",
+                "country": "australia",
+            },
+            {
+                "unit_number": 22,
+                "street_number": 42,
+                "street_name": "FDF STREET",
+                "suburb": "WEST MELBOURNE",
+                "post_code": 3032,
+                "state": "VIC",
+                "country": "australia",
+            },
+            {
+                "unit_number": None,
+                "street_number": 80,
+                "street_name": "ROSEBERRY STREET",
+                "suburb": "NORTH MELBOURNE",
+                "post_code": 3032,
+                "state": "VIC",
+                "country": "australia",
+            },
+        ],
+        "beds": [10, 10, 10],
+        "baths": [10, 10, 10],
+        "cars": [10, 10, 10],
+        "property_size_m2": [304.3999938964844, 304.3999938964844, 304.3999938964844],
+        "land_size_m2": [100.30000305175781, 100.30000305175781, 100.30000305175781],
+        "condition": [None, None, None],
+        "property_type": [["apartment", "sixties_brick"], ["apartment", "sixties_brick"], ["apartment", "None"]],
+        "construction_date": [date(2000, 1, 1), date(2000, 1, 1), None],
+        "floors": [10, None, 100],
+    }
+    data_json = pl.DataFrame(properties_info_json)
+
+    pl.testing.assert_frame_equal(data_read.sort("floors"), data_json.sort("floors"), check_dtypes=False)
