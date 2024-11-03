@@ -32,7 +32,12 @@ class Postcode:
         """Read postcode for given country."""
         postcode_file = constants.POSTCODE_CSV_FILE.format(country=country)
 
-        postcodes = pl.read_csv(postcode_file, schema=POSTCODE_SCHEMA)
+        postcodes_raw = pl.read_csv(postcode_file, schema=POSTCODE_SCHEMA)
+
+        postcodes = postcodes_raw.select(
+            pl.col("suburb").str.strip_chars().str.to_uppercase().str.replace(" ", "_"),
+            pl.col("postcode"),
+        )
 
         return postcodes
 
@@ -50,9 +55,11 @@ class Postcode:
         """Find postcode name for the given suburb."""
         postcodes = cls.read_postcodes(country=country)
 
-        suburb = postcodes.filter(pl.col("suburb") == suburb).select("postcode").item(0, 0)
+        suburb_clean = suburb.strip().upper().replace(" ", "_")
 
-        return suburb
+        clean = postcodes.filter(pl.col("suburb") == suburb_clean).select("postcode").item(0, 0)
+
+        return clean
 
 
 ####### ADDRESSES ########################
@@ -116,17 +123,24 @@ class PriceRecord(BaseModel):
         )
         price_records_raw = cls._read_csv(price_records_file)
 
-        # price_records_formatted = (
-        #     price_records_raw
-        #     .select(
-        #         pl.Struct(
+        postcode = Postcode.find_postcode(clean=suburb, country=country)
 
-        #         )
+        price_records_formatted = price_records_raw.select(
+            pl.col("record_type"),
+            pl.struct(
+                pl.col("unit_number"),
+                pl.col("street_number"),
+                pl.col("street_name"),
+                pl.lit(suburb).alias("suburb"),
+                pl.lit(postcode).alias("postcode"),
+                pl.lit(state).alias("postcode"),
+                pl.lit(country).alias("postcode"),
+            ).alias("address"),
+            pl.col("date"),
+            pl.col("price"),
+        )
 
-        #     )
-        # )
-
-        return price_records_raw
+        return price_records_formatted
 
     @classmethod
     def _read_csv(_cls, file: str, /) -> pl.DataFrame:

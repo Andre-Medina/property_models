@@ -6,7 +6,13 @@ import polars.testing
 import pytest
 
 from property_models.constants import PropertyCondition, PropertyType, RecordType
-from property_models.dev_utils.fixtures import CORRECT_PROPERTY_INFO_JSON, CORRECT_RECORDS_JSON
+from property_models.dev_utils.fixtures import (
+    CORRECT_PROPERTY_INFO_JSON,
+    CORRECT_RECORDS_JSON,
+    TEST_COUNTRY,
+    TEST_POSTCODE,
+    TEST_SUBURB,
+)
 from property_models.models import (
     Address,
     Postcode,  # Import the Postcode class from your module
@@ -19,27 +25,32 @@ from property_models.models import (
 
 def test_find_suburb(mock_postcodes):
     """Test the find_suburb method for a known postcode."""
-    suburb = Postcode.find_suburb(postcode=200, country="aus")
-    assert suburb == "australian_national_university"
+    suburb = Postcode.find_suburb(postcode=200, country=TEST_COUNTRY)
+    assert suburb == "australian_national_university".upper()
 
-    suburb = Postcode.find_suburb(postcode=2540, country="aus")
-    assert suburb == "jervis_bay"
+    suburb = Postcode.find_suburb(postcode=2540, country=TEST_COUNTRY)
+    assert suburb == "jervis_bay".upper()
 
-    suburb = Postcode.find_suburb(postcode=2600, country="aus")
-    assert suburb == "deakin_west"
+    suburb = Postcode.find_suburb(postcode=2600, country=TEST_COUNTRY)
+    assert suburb == "deakin_west".upper()
+
+    suburb = Postcode.find_suburb(postcode=TEST_POSTCODE, country=TEST_COUNTRY)
+    assert suburb == TEST_SUBURB
 
 
 def test_find_postcode(mock_postcodes):
     """Test the find_postcode method for a known suburb."""
-    postcode = Postcode.find_postcode(suburb="australian_national_university", country="aus")
+    postcode = Postcode.find_postcode(suburb="australian_national_university", country=TEST_COUNTRY)
     assert postcode == 200
 
-    postcode = Postcode.find_postcode(suburb="jervis_bay", country="aus")
+    postcode = Postcode.find_postcode(suburb="jervis_bay ", country=TEST_COUNTRY)
     assert postcode == 2540
-    postcode = Postcode.find_postcode(suburb="duntroon", country="aus")
+    postcode = Postcode.find_postcode(suburb="duntroon", country=TEST_COUNTRY)
     assert postcode == 2600
-    postcode = Postcode.find_postcode(suburb="deakin_west", country="aus")
+    postcode = Postcode.find_postcode(suburb="DEAKIN WEST", country=TEST_COUNTRY)
     assert postcode == 2600
+    postcode = Postcode.find_postcode(suburb=TEST_SUBURB, country=TEST_COUNTRY)
+    assert postcode == TEST_POSTCODE
 
 
 ##### ADDRESSES ###############
