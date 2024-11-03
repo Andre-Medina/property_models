@@ -10,9 +10,7 @@ from tqdm import tqdm
 from property_models import constants
 from property_models.constants import (
     POSTCODE_SCHEMA,
-    PRICE_RECORDS_CSV_FILE,
     PRICE_RECORDS_SCHEMA,
-    PROPERTIES_INFO_JSON_FILE,
     PROPERTIES_INFO_SCHEMA,
     PropertyCondition,
     PropertyType,
@@ -111,7 +109,7 @@ class PriceRecord(BaseModel):
     @classmethod
     def read(cls, *, country: str, state: str, suburb: str) -> pl.DataFrame:
         """Read historical records for a specific physical location."""
-        price_records_file = PRICE_RECORDS_CSV_FILE.format(
+        price_records_file = constants.PRICE_RECORDS_CSV_FILE.format(
             country=country,
             state=state,
             suburb=suburb,
@@ -151,7 +149,7 @@ class PriceRecord(BaseModel):
     @classmethod
     def write(cls, price_records: pl.DataFrame, *, country: str, state: str, suburb: str) -> None:
         """Write records to a csv file."""
-        price_records_file = PRICE_RECORDS_CSV_FILE.format(
+        price_records_file = constants.PRICE_RECORDS_CSV_FILE.format(
             country=country,
             state=state,
             suburb=suburb,
@@ -202,7 +200,7 @@ class PropertyInfo(BaseModel):
     @classmethod
     def read(cls, *, country: str, state: str, suburb: str) -> pl.DataFrame:
         """Read historical records for a specific physical location."""
-        properties_info_json = PROPERTIES_INFO_JSON_FILE.format(
+        properties_info_json = constants.PROPERTIES_INFO_JSON_FILE.format(
             country=country,
             state=state,
             suburb=suburb,

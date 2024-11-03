@@ -18,8 +18,7 @@ from property_models.models import (
 
 #### POSTCODES ##########
 
-# Sample CSV data for the test
-MOCK_CSV_DATA = """postcode,suburb
+MOCK_POSTCODE_CSV_DATA = """postcode,suburb
 200,australian_national_university
 2540,jervis_bay
 2600,deakin_west
@@ -28,23 +27,23 @@ MOCK_CSV_DATA = """postcode,suburb
 
 
 @pytest.fixture(scope="function")
-def mock_postcode_file():
+def mock_postcodes():
     """Create a temporary file with the mock CSV data."""
     with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix="_aus.csv") as temp_file:
-        temp_file.write(MOCK_CSV_DATA)
+        temp_file.write(MOCK_POSTCODE_CSV_DATA)
         temp_file_path = temp_file.name
         temp_file_format = temp_file_path.split("_aus")[0] + "_{country}.csv"
 
     original_template = constants.POSTCODE_CSV_FILE
     constants.POSTCODE_CSV_FILE = temp_file_format
 
-    yield temp_file_format
+    yield temp_file_path
 
     constants.POSTCODE_CSV_FILE = original_template
     os.remove(temp_file_path)
 
 
-def test_find_suburb(mock_postcode_file):
+def test_find_suburb(mock_postcodes):
     """Test the find_suburb method for a known postcode."""
     suburb = Postcode.find_suburb(postcode=200, country="aus")
     assert suburb == "australian_national_university"
@@ -56,7 +55,7 @@ def test_find_suburb(mock_postcode_file):
     assert suburb == "deakin_west"
 
 
-def test_find_postcode(mock_postcode_file):
+def test_find_postcode(mock_postcodes):
     """Test the find_postcode method for a known suburb."""
     postcode = Postcode.find_postcode(suburb="australian_national_university", country="aus")
     assert postcode == 200
@@ -166,30 +165,44 @@ def test_historical_price_init(_name, record_type, address, price, date):
     )
 
 
-def test_historical_price_read_csv():
+MOCK_RECORDS_CSV_DATA = """
+unit_number,street_number,street_name,date,record_type,price
+,1,STEELE STREET,2020-01-01,auction,1000000
+10,31,LONG ROAD,2020-10-01,no_sale,500000
+,31,BROAD WAY,2025-12-01,private_sale,5000000
+,,,,,
+"""
+CORRECT_RECORDS_JSON = {
+    "unit_number": [None, 10, None, None],
+    "street_number": [1, 31, 31, None],
+    "street_name": ["STEELE STREET", "LONG ROAD", "BROAD WAY", None],
+    "date": [date(2020, 1, 1), date(2020, 10, 1), date(2025, 12, 1), None],
+    "record_type": ["auction", "no_sale", "private_sale", None],
+    "price": [1000000, 500000, 5000000, None],
+}
+
+
+@pytest.fixture(scope="function")
+def mock_price_records():
+    """Create a temporary file with the mock CSV data."""
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix="_aus_vic_suburb.csv") as temp_file:
+        temp_file.write(MOCK_RECORDS_CSV_DATA)
+        temp_file_path = temp_file.name
+        temp_file_format = temp_file_path.split("_aus")[0] + "_{country}_{state}_{suburb}.csv"
+
+    original_template = constants.PRICE_RECORDS_CSV_FILE
+    constants.PRICE_RECORDS_CSV_FILE = temp_file_format
+
+    yield temp_file_path
+
+    constants.PRICE_RECORDS_CSV_FILE = original_template
+    os.remove(temp_file_path)
+
+
+def test_historical_price_read_csv(mock_price_records):
     """Create csv contents and make sure the read function works."""
-    records_csv = b"""\
-    unit_number,street_number,street_name,date,record_type,price
-    ,1,STEELE STREET,2020-01-01,auction,1000000
-    10,31,LONG ROAD,2020-10-01,no_sale,500000
-    ,31,BROAD WAY,2025-12-01,private_sale,5000000
-    """
-
-    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
-        temp_file.write(records_csv)
-        temp_file.seek(0)
-        data_csv = PriceRecord._read_csv(records_csv)
-
-    records_json = {
-        "unit_number": [None, 10, None, None],
-        "street_number": [1, 31, 31, None],
-        "street_name": ["STEELE STREET", "LONG ROAD", "BROAD WAY", None],
-        "date": [date(2020, 1, 1), date(2020, 10, 1), date(2025, 12, 1), None],
-        "record_type": ["auction", "no_sale", "private_sale", None],
-        "price": [1000000, 500000, 5000000, None],
-    }
-    data_json = pl.DataFrame(records_json)
-
+    data_csv = PriceRecord._read_csv(mock_price_records)
+    data_json = pl.DataFrame(CORRECT_RECORDS_JSON)
     pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
 
 
