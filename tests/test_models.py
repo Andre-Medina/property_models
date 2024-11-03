@@ -65,7 +65,7 @@ def test_find_postcode(mock_postcodes):
         (
             "Basic AUS unit 1, ",
             "U2 42-44 Example St, STANMORE, NSW 2048",
-            "australia",
+            TEST_COUNTRY,
             {
                 "unit_number": 2,
                 "street_number": 42,
@@ -73,13 +73,13 @@ def test_find_postcode(mock_postcodes):
                 "suburb": "STANMORE",
                 "postcode": 2048,
                 "state": "NSW",
-                "country": "australia",
+                "country": TEST_COUNTRY,
             },
         ),
         (
             "Basic AUS unit 2, ",
             "7/67 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
-            "australia",
+            TEST_COUNTRY,
             {
                 "unit_number": 7,
                 "street_number": 67,
@@ -87,13 +87,13 @@ def test_find_postcode(mock_postcodes):
                 "suburb": "ASCOT VALE",
                 "postcode": 3032,
                 "state": "VIC",
-                "country": "australia",
+                "country": TEST_COUNTRY,
             },
         ),
         (
             "Basic AUS unit 2, ",
             "80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
-            "australia",
+            TEST_COUNTRY,
             {
                 "unit_number": None,
                 "street_number": 80,
@@ -101,7 +101,7 @@ def test_find_postcode(mock_postcodes):
                 "suburb": "ASCOT VALE",
                 "postcode": 3032,
                 "state": "VIC",
-                "country": "australia",
+                "country": TEST_COUNTRY,
             },
         ),
     ],
@@ -123,21 +123,21 @@ def test_address_parsing(_name, address, country, correct_json):
         (
             "Basic construction, ",
             RecordType.AUCTION,
-            ("80 FIFTH STREET, ASCOT VALE, VIC 3032", "australia"),
+            ("80 FIFTH STREET, ASCOT VALE, VIC 3032", TEST_COUNTRY),
             100000,
             date(2020, 1, 1),
         ),
         (
             "Null price, ",
             RecordType.ENQUIRY,
-            ("80 SAMPLE STREET, ASCOT VALE, VIC 3032", "australia"),
+            ("80 SAMPLE STREET, ASCOT VALE, VIC 3032", TEST_COUNTRY),
             None,
             date(2020, 1, 1),
         ),
         (
             "string record, ",
             " NO Sale",
-            ("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", "australia"),
+            ("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", TEST_COUNTRY),
             200000,
             date(2020, 1, 1),
         ),
@@ -159,19 +159,19 @@ def test_historical_price_to_records():
         PriceRecord(
             date=date(2020, 1, 1),
             record_type=RecordType.parse(RecordType.AUCTION),
-            address=Address.parse("80 FIFTH STREET, ASCOT VALE, VIC 3032", country="australia"),
+            address=Address.parse("80 FIFTH STREET, ASCOT VALE, VIC 3032", country=TEST_COUNTRY),
             price=100000,
         ),
         PriceRecord(
             date=date(2020, 1, 1),
             record_type=RecordType.parse(RecordType.ENQUIRY),
-            address=Address.parse("80 SAMPLE STREET, ASCOT VALE, VIC 3032", country="australia"),
+            address=Address.parse("80 SAMPLE STREET, ASCOT VALE, VIC 3032", country=TEST_COUNTRY),
             price=None,
         ),
         PriceRecord(
             date=date(2020, 1, 1),
             record_type=RecordType.parse(" NO Sale"),
-            address=Address.parse("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", country="australia"),
+            address=Address.parse("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", country=TEST_COUNTRY),
             price=200000,
         ),
     ]
@@ -227,7 +227,7 @@ def test_historical_price_write(mock_price_records):
         (
             "Basic construction, ",
             PropertyType.LAND.NEW_BUILD,
-            ("80 FIFTH ST, ASCOT, VIC 3032", "australia"),
+            ("80 FIFTH ST, ASCOT, VIC 3032", TEST_COUNTRY),
             None,
             2,
             date(2020, 1, 1),
@@ -236,7 +236,7 @@ def test_historical_price_write(mock_price_records):
         (
             "Null values, ",
             PropertyType.APARTMENT.SIXTIES_BRICK,
-            ("80 FIFTH ST, ASCOT, VIC 3032", "australia"),
+            ("80 FIFTH ST, ASCOT, VIC 3032", TEST_COUNTRY),
             None,
             4,
             None,
@@ -245,7 +245,7 @@ def test_historical_price_write(mock_price_records):
         (
             "string record, ",
             PropertyType.TOWN_HOUSE.GENERAL,
-            ("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", "australia"),
+            ("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", TEST_COUNTRY),
             None,
             None,
             date(2020, 1, 30),
@@ -275,7 +275,7 @@ def test_property_type_from_stringified_dict():
     """Test `from_stringified_dict` method."""
     property_info_original = PropertyInfo(
         property_type=PropertyType.parse(PropertyType.APARTMENT.SIXTIES_BRICK),
-        address=Address.parse("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", country="australia"),
+        address=Address.parse("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", country=TEST_COUNTRY),
         condition=None,
         beds=10,
         cars=10,

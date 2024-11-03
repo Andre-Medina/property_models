@@ -1,7 +1,6 @@
 import json
 from datetime import date
 from functools import lru_cache
-from typing import Literal
 
 import fsspec
 import polars as pl
@@ -12,6 +11,7 @@ from tqdm import tqdm
 from property_models import constants
 from property_models.constants import (
     ADDRESS_SCHEMA,
+    ALLOWED_COUNTRIES,
     POSTCODE_SCHEMA,
     PRICE_RECORDS_SCHEMA,
     PROPERTIES_INFO_SCHEMA,
@@ -20,18 +20,14 @@ from property_models.constants import (
     RecordType,
 )
 
-ALLOWED_COUNTRIES = Literal["australia"]
-
 
 ####### POSTCODES #####################
-
-
 class Postcode:
     """Class to hold postcodes for different countries and convert between postcodes and suburbs."""
 
     @lru_cache
     @staticmethod
-    def read_postcodes(*, country: str) -> pl.DataFrame:
+    def read_postcodes(*, country: ALLOWED_COUNTRIES) -> pl.DataFrame:
         """Read postcode for given country."""
         postcode_file = constants.POSTCODE_CSV_FILE.format(country=country)
 
@@ -45,7 +41,7 @@ class Postcode:
         return postcodes
 
     @classmethod
-    def find_suburb(cls, *, postcode: int, country: str) -> str:
+    def find_suburb(cls, *, postcode: int, country: ALLOWED_COUNTRIES) -> str:
         """Find suburb name for the given postcode."""
         postcodes = cls.read_postcodes(country=country)
 
@@ -57,7 +53,7 @@ class Postcode:
         return suburb
 
     @classmethod
-    def find_postcode(cls, *, suburb: str, country: str) -> int:
+    def find_postcode(cls, *, suburb: str, country: ALLOWED_COUNTRIES) -> int:
         """Find postcode name for the given suburb."""
         postcodes = cls.read_postcodes(country=country)
 
@@ -81,13 +77,13 @@ class Address(BaseModel):
     suburb: str
     postcode: int
     state: str
-    country: str
+    country: ALLOWED_COUNTRIES
 
     @classmethod
     def parse(cls, address, *, country: ALLOWED_COUNTRIES) -> "Address":
         """Takes an address and a country and parses to a common format."""
         match country:
-            case "australia":
+            case "AUS":
                 address_object = cls._parse_australian_address(address)
 
             case _:
@@ -107,7 +103,7 @@ class Address(BaseModel):
             suburb=parsed_address._locality,
             postcode=int(parsed_address._post),
             state=parsed_address._state,
-            country="australia",
+            country="AUS",
         )
 
         return address_object
@@ -168,7 +164,7 @@ class PriceRecord(BaseModel):
     price: int | None
 
     @classmethod
-    def read(cls, *, country: str, state: str, suburb: str) -> pl.DataFrame:
+    def read(cls, *, country: ALLOWED_COUNTRIES, state: str, suburb: str) -> pl.DataFrame:
         """Read historical records for a specific physical location."""
         price_records_file = constants.PRICE_RECORDS_CSV_FILE.format(
             country=country,
@@ -215,7 +211,7 @@ class PriceRecord(BaseModel):
         return price_records
 
     @classmethod
-    def write(cls, price_records: pl.DataFrame, *, country: str, state: str, suburb: str) -> None:
+    def write(cls, price_records: pl.DataFrame, *, country: ALLOWED_COUNTRIES, state: str, suburb: str) -> None:
         """Write records to a csv file."""
         price_records_file = constants.PRICE_RECORDS_CSV_FILE.format(
             country=country,
@@ -276,7 +272,7 @@ class PropertyInfo(BaseModel):
     model_config = ConfigDict({"arbitrary_types_allowed": True})
 
     @classmethod
-    def read(cls, *, country: str, state: str, suburb: str) -> pl.DataFrame:
+    def read(cls, *, country: ALLOWED_COUNTRIES, state: str, suburb: str) -> pl.DataFrame:
         """Read historical records for a specific physical location."""
         properties_info_file = constants.PROPERTIES_INFO_JSON_FILE.format(
             country=country,
@@ -346,7 +342,7 @@ class PropertyInfo(BaseModel):
         return property_info_reloaded
 
     @classmethod
-    def write(cls, properties_info: pl.DataFrame, *, country: str, state: str, suburb: str) -> None:
+    def write(cls, properties_info: pl.DataFrame, *, country: ALLOWED_COUNTRIES, state: str, suburb: str) -> None:
         """Write historical records to a json file."""
         properties_info_file = constants.PROPERTIES_INFO_JSON_FILE.format(
             country=country,
