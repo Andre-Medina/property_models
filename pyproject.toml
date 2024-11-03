@@ -4,6 +4,7 @@ description = "Add a short description here"
 name = "property_models"
 requires-python = ">= 3.11"
 version = "0.1.0"
+dependencies = ["au-address-parser>=1.0.0,<2"]
 
 [build-system]
 build-backend = "hatchling.build"
@@ -27,3 +28,12 @@ pre-commit = ">=4.0.1,<5"
 ipykernel = ">=6.29.5,<7"
 selenium = "==4.2.0"
 certifi = ">=2024.8.30,<2025"
+bs4 = ">=4.12.3,<5"
+pydantic = ">=2.9.2,<3"
+polars = ">=1.11.0,<2"
+pyarrow = ">=17.0.0,<18"
+tqdm = ">=4.66.6,<5"
+fsspec = ">=2024.10.0,<2025"
+
+[project.entry-points.pytest11]
+property_models_fixtures = "property_models.dev_utils.fixtures"
