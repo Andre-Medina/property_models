@@ -15,15 +15,44 @@ TEST_STREET_NAMES = ["MY ST", "YOUR RD", "THEIR BLVD"]
 TEST_UNIT_NUMBERS = [None, 10, 300]
 TEST_STREET_NUMBERS = [10, 300, 1]
 
+TEST_ADDRESSES = [
+    {
+        "unit_number": TEST_UNIT_NUMBERS[0],
+        "street_number": TEST_STREET_NUMBERS[0],
+        "street_name": TEST_STREET_NAMES[0],
+        "suburb": TEST_SUBURB,
+        "postcode": TEST_POSTCODE,
+        "state": TEST_STATE,
+        "country": TEST_COUNTRY,
+    },
+    {
+        "unit_number": TEST_UNIT_NUMBERS[1],
+        "street_number": TEST_STREET_NUMBERS[1],
+        "street_name": TEST_STREET_NAMES[1],
+        "suburb": TEST_SUBURB,
+        "postcode": TEST_POSTCODE,
+        "state": TEST_STATE,
+        "country": TEST_COUNTRY,
+    },
+    {
+        "unit_number": TEST_UNIT_NUMBERS[2],
+        "street_number": TEST_STREET_NUMBERS[2],
+        "street_name": TEST_STREET_NAMES[2],
+        "suburb": TEST_SUBURB,
+        "postcode": TEST_POSTCODE,
+        "state": TEST_STATE,
+        "country": TEST_COUNTRY,
+    },
+]
 
 ####### POST CODE MOCKING
 
-MOCK_POSTCODE_CSV_DATA = """postcode,suburb
+MOCK_POSTCODE_CSV_DATA = f"""postcode,suburb
 200,australian_national_university
 2540,jervis_bay
 2600,deakin_west
 2600,duntroon
-3000,MY_SUBURB
+{TEST_POSTCODE},{TEST_SUBURB}
 """
 
 
@@ -51,20 +80,27 @@ unit_number,street_number,street_name,date,record_type,price
 {TEST_UNIT_NUMBERS[0] or ""},{TEST_STREET_NUMBERS[0] or ""},{TEST_STREET_NAMES[0] or ""},2020-01-01,auction,1000000
 {TEST_UNIT_NUMBERS[1] or ""},{TEST_STREET_NUMBERS[1] or ""},{TEST_STREET_NAMES[1] or ""},2020-10-01,no_sale,500000
 {TEST_UNIT_NUMBERS[2] or ""},{TEST_STREET_NUMBERS[2] or ""},{TEST_STREET_NAMES[2] or ""},2025-12-01,private_sale,5000000
-,,,,,
 """
+
 CORRECT_RECORDS_JSON = {
-    "unit_number": [TEST_UNIT_NUMBERS[0], TEST_UNIT_NUMBERS[1], TEST_UNIT_NUMBERS[2], None],
-    "street_number": [TEST_STREET_NUMBERS[0], TEST_STREET_NUMBERS[1], TEST_STREET_NUMBERS[2], None],
-    "street_name": [TEST_STREET_NAMES[0], TEST_STREET_NAMES[1], TEST_STREET_NAMES[2], None],
-    "date": [date(2020, 1, 1), date(2020, 10, 1), date(2025, 12, 1), None],
-    "record_type": ["auction", "no_sale", "private_sale", None],
-    "price": [1000000, 500000, 5000000, None],
+    "address": TEST_ADDRESSES,
+    "date": [date(2020, 1, 1), date(2020, 10, 1), date(2025, 12, 1)],
+    "record_type": ["auction", "no_sale", "private_sale"],
+    "price": [1000000, 500000, 5000000],
+}
+
+CORRECT_RECORDS_COMPRESSED_JSON = {
+    "unit_number": [TEST_UNIT_NUMBERS[0], TEST_UNIT_NUMBERS[1], TEST_UNIT_NUMBERS[2]],
+    "street_number": [TEST_STREET_NUMBERS[0], TEST_STREET_NUMBERS[1], TEST_STREET_NUMBERS[2]],
+    "street_name": [TEST_STREET_NAMES[0], TEST_STREET_NAMES[1], TEST_STREET_NAMES[2]],
+    "date": CORRECT_RECORDS_JSON["date"],
+    "record_type": CORRECT_RECORDS_JSON["record_type"],
+    "price": CORRECT_RECORDS_JSON["price"],
 }
 
 
 @pytest.fixture(scope="function")
-def mock_price_records():
+def mock_price_records(mock_postcodes):  # noqa: ARG001
     """Create a temporary file with the mock CSV data."""
     with tempfile.NamedTemporaryFile(
         mode="w", delete=False, suffix=f"_{TEST_COUNTRY}_{TEST_STATE}_{TEST_SUBURB}.csv"
@@ -105,35 +141,7 @@ MOCK_PROPERTY_INFO_JSON_DATA = f"""[
 "construction_date": null, "floors": 100}}
 ]"""
 CORRECT_PROPERTY_INFO_JSON = {
-    "address": [
-        {
-            "unit_number": TEST_UNIT_NUMBERS[0],
-            "street_number": TEST_STREET_NUMBERS[0],
-            "street_name": TEST_STREET_NAMES[0],
-            "suburb": TEST_SUBURB,
-            "postcode": TEST_POSTCODE,
-            "state": TEST_STATE,
-            "country": TEST_COUNTRY,
-        },
-        {
-            "unit_number": TEST_UNIT_NUMBERS[1],
-            "street_number": TEST_STREET_NUMBERS[1],
-            "street_name": TEST_STREET_NAMES[1],
-            "suburb": TEST_SUBURB,
-            "postcode": TEST_POSTCODE,
-            "state": TEST_STATE,
-            "country": TEST_COUNTRY,
-        },
-        {
-            "unit_number": TEST_UNIT_NUMBERS[2],
-            "street_number": TEST_STREET_NUMBERS[2],
-            "street_name": TEST_STREET_NAMES[2],
-            "suburb": TEST_SUBURB,
-            "postcode": TEST_POSTCODE,
-            "state": TEST_STATE,
-            "country": TEST_COUNTRY,
-        },
-    ],
+    "address": TEST_ADDRESSES,
     "beds": [10, 10, 10],
     "baths": [10, 10, 10],
     "cars": [10, 10, 10],
@@ -147,7 +155,7 @@ CORRECT_PROPERTY_INFO_JSON = {
 
 
 @pytest.fixture(scope="function")
-def mock_property_info():
+def mock_property_info(mock_postcodes):  # noqa: ARG001
     """Create a temporary file with the mock CSV data."""
     with tempfile.NamedTemporaryFile(
         mode="w", delete=False, suffix=f"_{TEST_COUNTRY}_{TEST_STATE}_{TEST_SUBURB}.csv"

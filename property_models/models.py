@@ -46,7 +46,10 @@ class Postcode:
         """Find suburb name for the given postcode."""
         postcodes = cls.read_postcodes(country=country)
 
-        suburb = postcodes.filter(pl.col("postcode") == postcode).select("suburb").item(0, 0)
+        try:
+            suburb = postcodes.filter(pl.col("postcode") == postcode).select("suburb").item(0, 0)
+        except IndexError:
+            raise ValueError(f"Could not find suburb: {suburb!r}") from None
 
         return suburb
 
@@ -57,7 +60,10 @@ class Postcode:
 
         suburb_clean = suburb.strip().upper().replace(" ", "_")
 
-        clean = postcodes.filter(pl.col("suburb") == suburb_clean).select("postcode").item(0, 0)
+        try:
+            clean = postcodes.filter(pl.col("suburb") == suburb_clean).select("postcode").item(0, 0)
+        except IndexError:
+            raise ValueError(f"Could not find suburb: {suburb!r}") from None
 
         return clean
 
@@ -108,9 +114,9 @@ class Address(BaseModel):
 class PriceRecord(BaseModel):
     """Model to organise price records."""
 
-    record_type: RecordType
     address: Address
     date: date
+    record_type: RecordType
     price: int | None
 
     @classmethod
@@ -123,20 +129,20 @@ class PriceRecord(BaseModel):
         )
         price_records_raw = cls._read_csv(price_records_file)
 
-        postcode = Postcode.find_postcode(clean=suburb, country=country)
+        postcode = Postcode.find_postcode(suburb=suburb, country=country)
 
         price_records_formatted = price_records_raw.select(
-            pl.col("record_type"),
             pl.struct(
                 pl.col("unit_number"),
                 pl.col("street_number"),
                 pl.col("street_name"),
                 pl.lit(suburb).alias("suburb"),
                 pl.lit(postcode).alias("postcode"),
-                pl.lit(state).alias("postcode"),
-                pl.lit(country).alias("postcode"),
+                pl.lit(state).alias("state"),
+                pl.lit(country).alias("country"),
             ).alias("address"),
             pl.col("date"),
+            pl.col("record_type"),
             pl.col("price"),
         )
 

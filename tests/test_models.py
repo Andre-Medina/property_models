@@ -8,9 +8,11 @@ import pytest
 from property_models.constants import PropertyCondition, PropertyType, RecordType
 from property_models.dev_utils.fixtures import (
     CORRECT_PROPERTY_INFO_JSON,
+    CORRECT_RECORDS_COMPRESSED_JSON,
     CORRECT_RECORDS_JSON,
     TEST_COUNTRY,
     TEST_POSTCODE,
+    TEST_STATE,
     TEST_SUBURB,
 )
 from property_models.models import (
@@ -153,6 +155,13 @@ def test_historical_price_init(_name, record_type, address, price, date):
 def test_historical_price_read_csv(mock_price_records):
     """Create csv contents and make sure the read function works."""
     data_csv = PriceRecord._read_csv(mock_price_records)
+    data_json = pl.DataFrame(CORRECT_RECORDS_COMPRESSED_JSON)
+    pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
+
+
+def test_historical_price_read(mock_price_records):  # noqa: ARG001
+    """Create csv contents and make sure the read function works."""
+    data_csv = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
     data_json = pl.DataFrame(CORRECT_RECORDS_JSON)
     pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
 
@@ -280,6 +289,14 @@ def test_property_type_from_stringified_dict():
 def test_properties_info_read_csv(mock_property_info):
     """Create csv contents and make sure the read function works."""
     data_read = PropertyInfo.read_json(mock_property_info)
+    data_json = pl.DataFrame(CORRECT_PROPERTY_INFO_JSON)
+
+    pl.testing.assert_frame_equal(data_read.sort("floors"), data_json.sort("floors"), check_dtypes=False)
+
+
+def test_properties_info_read(mock_property_info):  # noqa: ARG001
+    """Create csv contents and make sure the read function works."""
+    data_read = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
     data_json = pl.DataFrame(CORRECT_PROPERTY_INFO_JSON)
 
     pl.testing.assert_frame_equal(data_read.sort("floors"), data_json.sort("floors"), check_dtypes=False)
