@@ -1,7 +1,9 @@
+import json
 from datetime import date
 from functools import lru_cache
 from typing import Literal
 
+import fsspec
 import polars as pl
 from au_address_parser import AbAddressUtility
 from pydantic import BaseModel, ConfigDict
@@ -175,7 +177,17 @@ class PriceRecord(BaseModel):
             suburb=suburb,
         )
 
-        price_records.write_csv(price_records_file)
+        price_records_compressed = price_records.select(
+            pl.col("address").struct["unit_number"],
+            pl.col("address").struct["street_number"],
+            pl.col("address").struct["street_name"],
+            pl.col("date"),
+            pl.col("record_type"),
+            pl.col("price"),
+        )
+
+        with fsspec.open(price_records_file, "w") as open_file:
+            price_records_compressed.write_csv(open_file)
 
     @classmethod
     def to_records(cls, price_record_list: list["PriceRecord"], /) -> pl.DataFrame:
@@ -220,21 +232,21 @@ class PropertyInfo(BaseModel):
     @classmethod
     def read(cls, *, country: str, state: str, suburb: str) -> pl.DataFrame:
         """Read historical records for a specific physical location."""
-        properties_info_json = constants.PROPERTIES_INFO_JSON_FILE.format(
+        properties_info_file = constants.PROPERTIES_INFO_JSON_FILE.format(
             country=country,
             state=state,
             suburb=suburb,
         )
-        historical_records = cls.read_json(properties_info_json)
-        return historical_records
+        properties_info = cls.read_json(properties_info_file)
+        return properties_info
 
     @classmethod
-    def read_json(_cls, properties_info_json: str, /, full_validation: bool = True) -> pl.DataFrame:
+    def read_json(_cls, properties_info_file: str, /, full_validation: bool = True) -> pl.DataFrame:
         """Read and validate contents of file containing several records."""
         """Read local `.json` file containing properties info into a dataframe."""
 
         properties_info_raw = pl.read_json(
-            properties_info_json, schema=PROPERTIES_INFO_SCHEMA | {"construction_date": pl.String}
+            properties_info_file, schema=PROPERTIES_INFO_SCHEMA | {"construction_date": pl.String}
         )
         properties_info = properties_info_raw.with_columns(pl.col("construction_date").str.to_date())
 
@@ -286,3 +298,15 @@ class PropertyInfo(BaseModel):
         )
 
         return property_info_reloaded
+
+    @classmethod
+    def write(cls, properties_info: pl.DataFrame, *, country: str, state: str, suburb: str) -> None:
+        """Write historical records to a json file."""
+        properties_info_file = constants.PROPERTIES_INFO_JSON_FILE.format(
+            country=country,
+            state=state,
+            suburb=suburb,
+        )
+
+        with fsspec.open(properties_info_file, "w") as open_file:
+            json.dump(properties_info.rows(named=True), open_file, indent=4, default=str)

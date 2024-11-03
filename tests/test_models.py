@@ -1,4 +1,5 @@
 import json
+import os
 from datetime import date
 
 import polars as pl
@@ -152,20 +153,6 @@ def test_historical_price_init(_name, record_type, address, price, date):
     )
 
 
-def test_historical_price_read_csv(mock_price_records):
-    """Create csv contents and make sure the read function works."""
-    data_csv = PriceRecord._read_csv(mock_price_records)
-    data_json = pl.DataFrame(CORRECT_RECORDS_COMPRESSED_JSON)
-    pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
-
-
-def test_historical_price_read(mock_price_records):  # noqa: ARG001
-    """Create csv contents and make sure the read function works."""
-    data_csv = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
-    data_json = pl.DataFrame(CORRECT_RECORDS_JSON)
-    pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
-
-
 def test_historical_price_to_records():
     """Takes a list of historical prices and converts them to a df."""
     historical_prices = [
@@ -201,6 +188,34 @@ def test_historical_price_to_records():
     data_json = pl.DataFrame(records_json)
 
     pl.testing.assert_frame_equal(historical_records, data_json, check_dtypes=False)
+
+
+def test_historical_price_read_csv(mock_price_records):
+    """Create csv contents and make sure the read function works."""
+    data_csv = PriceRecord._read_csv(mock_price_records)
+    data_json = pl.DataFrame(CORRECT_RECORDS_COMPRESSED_JSON)
+    pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
+
+
+def test_historical_price_read(mock_price_records):  # noqa: ARG001
+    """Create csv contents and make sure the read function works."""
+    data_csv = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    data_json = pl.DataFrame(CORRECT_RECORDS_JSON)
+    pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
+
+
+def test_historical_price_write(mock_price_records):
+    """Test writing data writes the correct data."""
+    data_csv = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    os.remove(mock_price_records)
+    with pytest.raises(FileNotFoundError):
+        PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+
+    data_csv.pipe(PriceRecord.write, country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    data_re_read = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+
+    data_json = pl.DataFrame(CORRECT_RECORDS_JSON)
+    pl.testing.assert_frame_equal(data_re_read, data_json, check_dtypes=False)
 
 
 ####### PROPERTY INFO ############
@@ -288,15 +303,35 @@ def test_property_type_from_stringified_dict():
 
 def test_properties_info_read_csv(mock_property_info):
     """Create csv contents and make sure the read function works."""
-    data_read = PropertyInfo.read_json(mock_property_info)
-    data_json = pl.DataFrame(CORRECT_PROPERTY_INFO_JSON)
+    properties_info_mocked = PropertyInfo.read_json(mock_property_info)
+    properties_info_correct = pl.DataFrame(CORRECT_PROPERTY_INFO_JSON)
 
-    pl.testing.assert_frame_equal(data_read.sort("floors"), data_json.sort("floors"), check_dtypes=False)
+    pl.testing.assert_frame_equal(
+        properties_info_mocked.sort("floors"), properties_info_correct.sort("floors"), check_dtypes=False
+    )
 
 
 def test_properties_info_read(mock_property_info):  # noqa: ARG001
     """Create csv contents and make sure the read function works."""
-    data_read = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
-    data_json = pl.DataFrame(CORRECT_PROPERTY_INFO_JSON)
+    properties_info_mocked = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    properties_info_correct = pl.DataFrame(CORRECT_PROPERTY_INFO_JSON)
 
-    pl.testing.assert_frame_equal(data_read.sort("floors"), data_json.sort("floors"), check_dtypes=False)
+    pl.testing.assert_frame_equal(
+        properties_info_mocked.sort("floors"), properties_info_correct.sort("floors"), check_dtypes=False
+    )
+
+
+def test_properties_info_write(mock_property_info):
+    """Test writing data writes the correct data."""
+    properties_info_mocked = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    os.remove(mock_property_info)
+    with pytest.raises(FileNotFoundError):
+        PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+
+    properties_info_mocked.pipe(PropertyInfo.write, country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    properties_info_re_read = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+
+    properties_info_correct = pl.DataFrame(CORRECT_PROPERTY_INFO_JSON)
+    pl.testing.assert_frame_equal(
+        properties_info_re_read.sort("floors"), properties_info_correct.sort("floors"), check_dtypes=False
+    )
