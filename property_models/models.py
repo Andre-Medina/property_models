@@ -11,6 +11,7 @@ from tqdm import tqdm
 
 from property_models import constants
 from property_models.constants import (
+    ADDRESS_SCHEMA,
     POSTCODE_SCHEMA,
     PRICE_RECORDS_SCHEMA,
     PROPERTIES_INFO_SCHEMA,
@@ -111,6 +112,60 @@ class Address(BaseModel):
 
         return address_object
 
+    # @staticmethod
+    # def filter(dataframe: pl.DataFrame, address: "Address" | None) -> pl.DataFrame:
+    #     """Filter a dataframe based on an address."""
+    #     cls.check_address_column(dataframe)
+
+    #     dataframe_filtered = (
+    #         dataframe
+    #     )
+
+    @classmethod
+    def join_on(cls, dataframe_1: pl.DataFrame, dataframe_2: pl.DataFrame, /) -> pl.DataFrame:
+        """Join two dataframes with a `pl.Struct` `'address'` column on the addresses."""
+        cls._check_address_column(dataframe_1)
+        cls._check_address_column(dataframe_2)
+
+        dataframe_joined = (
+            dataframe_1.select(cls.expand_address_column())
+            .join(
+                dataframe_2.select(cls.expand_address_column()),
+                on=cls.unnested_address_columns(),
+                how="outer",
+                suffix="_right",
+                join_nulls=True,
+            )
+            .with_columns(cls.collapse_address_column())
+            .drop(*cls.unnested_address_columns(), *cls.unnested_address_columns(suffix="_right"))
+        )
+
+        return dataframe_joined
+
+    @classmethod
+    def _check_address_column(_cls, df: pl.DataFrame) -> None:
+        try:
+            is_address_struct = isinstance(df["address"].dtype, pl.Struct)
+            if not is_address_struct:
+                raise pl.exceptions.ColumnNotFoundError()
+        except pl.exceptions.ColumnNotFoundError:
+            raise ValueError(f"Data found to not have a valid `'address'` column:\n{df}") from None
+
+    @classmethod
+    def expand_address_column(cls) -> pl.Expr:
+        """Return polars expression for expand_address_column."""
+        return (pl.exclude("address"), pl.col("address").struct.unnest())
+
+    @classmethod
+    def unnested_address_columns(cls, *, suffix: str = "") -> list[pl.Expr]:
+        """Return polars expression for unnested_address_columns."""
+        return [pl.col(f"{address_column}{suffix}") for address_column in ADDRESS_SCHEMA]
+
+    @classmethod
+    def collapse_address_column(cls) -> pl.Expr:
+        """Return polars expression for collapse_address_column."""
+        return pl.struct(cls.unnested_address_columns()).alias("address")
+
 
 ########## PRICE RECORDS ###############
 class PriceRecord(BaseModel):
@@ -135,13 +190,13 @@ class PriceRecord(BaseModel):
 
         price_records_formatted = price_records_raw.select(
             pl.struct(
-                pl.col("unit_number"),
-                pl.col("street_number"),
-                pl.col("street_name"),
-                pl.lit(suburb).alias("suburb"),
-                pl.lit(postcode).alias("postcode"),
-                pl.lit(state).alias("state"),
-                pl.lit(country).alias("country"),
+                pl.col("unit_number").cast(ADDRESS_SCHEMA["unit_number"]),
+                pl.col("street_number").cast(ADDRESS_SCHEMA["street_number"]),
+                pl.col("street_name").cast(ADDRESS_SCHEMA["street_name"]),
+                pl.lit(suburb).alias("suburb").cast(ADDRESS_SCHEMA["suburb"]),
+                pl.lit(postcode).alias("postcode").cast(ADDRESS_SCHEMA["postcode"]),
+                pl.lit(state).alias("state").cast(ADDRESS_SCHEMA["state"]),
+                pl.lit(country).alias("country").cast(ADDRESS_SCHEMA["country"]),
             ).alias("address"),
             pl.col("date"),
             pl.col("record_type"),

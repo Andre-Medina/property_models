@@ -335,3 +335,16 @@ def test_properties_info_write(mock_property_info):
     pl.testing.assert_frame_equal(
         properties_info_re_read.sort("floors"), properties_info_correct.sort("floors"), check_dtypes=False
     )
+
+
+##### INTEGRATION #############
+
+
+def test_join_propeties_info_with_price_records(mock_property_info, mock_price_records):
+    """Test joining two of the main dataframes together works."""
+    properties_info_mocked = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    price_records_mocked = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+
+    combined_data = Address.join_on(properties_info_mocked, price_records_mocked)
+
+    assert not combined_data.is_empty()
