@@ -13,7 +13,8 @@ TEST_STATE = "VIC"
 
 TEST_STREET_NAMES = ["MY ST", "YOUR RD", "THEIR BLVD"]
 TEST_UNIT_NUMBERS = [None, 10, 300]
-TEST_STREET_NUMBERS = [10, None, 1]
+TEST_STREET_NUMBERS = [10, 300, 1]
+
 
 ####### POST CODE MOCKING
 
@@ -45,17 +46,17 @@ def mock_postcodes():
 
 ###### PRICE RECORDS MOCKING ########
 
-MOCK_RECORDS_CSV_DATA = """
+MOCK_RECORDS_CSV_DATA = f"""
 unit_number,street_number,street_name,date,record_type,price
-,1,STEELE STREET,2020-01-01,auction,1000000
-10,31,LONG ROAD,2020-10-01,no_sale,500000
-,31,BROAD WAY,2025-12-01,private_sale,5000000
+{TEST_UNIT_NUMBERS[0] or ""},{TEST_STREET_NUMBERS[0] or ""},{TEST_STREET_NAMES[0] or ""},2020-01-01,auction,1000000
+{TEST_UNIT_NUMBERS[1] or ""},{TEST_STREET_NUMBERS[1] or ""},{TEST_STREET_NAMES[1] or ""},2020-10-01,no_sale,500000
+{TEST_UNIT_NUMBERS[2] or ""},{TEST_STREET_NUMBERS[2] or ""},{TEST_STREET_NAMES[2] or ""},2025-12-01,private_sale,5000000
 ,,,,,
 """
 CORRECT_RECORDS_JSON = {
-    "unit_number": [None, 10, None, None],
-    "street_number": [1, 31, 31, None],
-    "street_name": ["STEELE STREET", "LONG ROAD", "BROAD WAY", None],
+    "unit_number": [TEST_UNIT_NUMBERS[0], TEST_UNIT_NUMBERS[1], TEST_UNIT_NUMBERS[2], None],
+    "street_number": [TEST_STREET_NUMBERS[0], TEST_STREET_NUMBERS[1], TEST_STREET_NUMBERS[2], None],
+    "street_name": [TEST_STREET_NAMES[0], TEST_STREET_NAMES[1], TEST_STREET_NAMES[2], None],
     "date": [date(2020, 1, 1), date(2020, 10, 1), date(2025, 12, 1), None],
     "record_type": ["auction", "no_sale", "private_sale", None],
     "price": [1000000, 500000, 5000000, None],
@@ -84,17 +85,20 @@ def mock_price_records():
 ######## PROPERTY INFO MOCKING ###########
 
 MOCK_PROPERTY_INFO_JSON_DATA = f"""[
-{{"address": {{"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
+{{"address": {{"unit_number": {TEST_UNIT_NUMBERS[0] or "null"}, "street_number": {TEST_STREET_NUMBERS[0] or "null"},
+"street_name": "{TEST_STREET_NAMES[0]}",
 "suburb": "{TEST_SUBURB}", "postcode": {TEST_POSTCODE}, "state": "{TEST_STATE}", "country": "{TEST_COUNTRY}"}},
 "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
 "condition": null, "property_type": ["apartment", "sixties_brick"],
 "construction_date": "2000-01-01", "floors": 10}},
-{{"address": {{"unit_number": 22, "street_number": 42, "street_name": "FDF STREET",
+{{"address": {{"unit_number": {TEST_UNIT_NUMBERS[1] or "null"}, "street_number": {TEST_STREET_NUMBERS[1] or "null"},
+"street_name": "{TEST_STREET_NAMES[1]}",
 "suburb": "{TEST_SUBURB}", "postcode": {TEST_POSTCODE}, "state": "{TEST_STATE}", "country": "{TEST_COUNTRY}"}},
 "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
 "condition": null, "property_type": ["apartment", "sixties_brick"],
 "construction_date": "2000-01-01", "floors": 1000}},
-{{"address": {{"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
+{{"address": {{"unit_number": {TEST_UNIT_NUMBERS[2] or "null"}, "street_number": {TEST_STREET_NUMBERS[2] or "null"},
+"street_name": "{TEST_STREET_NAMES[2]}",
 "suburb": "{TEST_SUBURB}", "postcode": {TEST_POSTCODE}, "state": "{TEST_STATE}", "country": "{TEST_COUNTRY}"}},
 "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
 "condition": null, "property_type": ["apartment", "None"],
@@ -103,27 +107,27 @@ MOCK_PROPERTY_INFO_JSON_DATA = f"""[
 CORRECT_PROPERTY_INFO_JSON = {
     "address": [
         {
-            "unit_number": None,
-            "street_number": 80,
-            "street_name": "ROSEBERRY STREET",
+            "unit_number": TEST_UNIT_NUMBERS[0],
+            "street_number": TEST_STREET_NUMBERS[0],
+            "street_name": TEST_STREET_NAMES[0],
             "suburb": TEST_SUBURB,
             "postcode": TEST_POSTCODE,
             "state": TEST_STATE,
             "country": TEST_COUNTRY,
         },
         {
-            "unit_number": 22,
-            "street_number": 42,
-            "street_name": "FDF STREET",
+            "unit_number": TEST_UNIT_NUMBERS[1],
+            "street_number": TEST_STREET_NUMBERS[1],
+            "street_name": TEST_STREET_NAMES[1],
             "suburb": TEST_SUBURB,
             "postcode": TEST_POSTCODE,
             "state": TEST_STATE,
             "country": TEST_COUNTRY,
         },
         {
-            "unit_number": None,
-            "street_number": 80,
-            "street_name": "ROSEBERRY STREET",
+            "unit_number": TEST_UNIT_NUMBERS[2],
+            "street_number": TEST_STREET_NUMBERS[2],
+            "street_name": TEST_STREET_NAMES[2],
             "suburb": TEST_SUBURB,
             "postcode": TEST_POSTCODE,
             "state": TEST_STATE,
