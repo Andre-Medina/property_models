@@ -18,6 +18,7 @@ POSTCODE_CSV_FILE: str = DATA_DIR + "/processed/{country}/suburb_to_postcode.csv
 PRICE_RECORDS_CSV_FILE: str = DATA_DIR + "/processed/{country}/{state}/{suburb}/records.csv"
 PROPERTIES_INFO_JSON_FILE: str = DATA_DIR + "/processed/{country}/{state}/{suburb}/properties.json"
 
+ALLOWED_COUNTRIES = Literal["AUS"]
 
 ####### SCHEMAS #######
 
