@@ -7,7 +7,7 @@ import polars.testing
 import pytest
 
 from property_models.constants import PropertyCondition, PropertyType, RecordType
-from property_models.models import Address, HistoricalPrice, PropertyInfo
+from property_models.models import Address, PriceRecord, PropertyInfo
 
 ##### ADDRESSES ###############
 
@@ -98,7 +98,7 @@ def test_address_parsing(_name, address, country, correct_json):
 )
 def test_historical_price_init(_name, record_type, address, price, date):
     """Test HistoricalPrice class can be initialized."""
-    HistoricalPrice(
+    PriceRecord(
         record_type=RecordType.parse(record_type) if isinstance(record_type, str) else record_type,
         address=Address.parse(address[0], country=address[1]),
         price=price,
@@ -118,7 +118,7 @@ def test_historical_price_read_csv():
     with tempfile.NamedTemporaryFile(delete=True) as temp_file:
         temp_file.write(records_csv)
         temp_file.seek(0)
-        data_csv = HistoricalPrice.read_csv(records_csv)
+        data_csv = PriceRecord.read_csv(records_csv)
 
     records_json = {
         "unit_number": [None, 10, None, None],
@@ -136,26 +136,26 @@ def test_historical_price_read_csv():
 def test_historical_price_to_records():
     """Takes a list of historical prices and converts them to a df."""
     historical_prices = [
-        HistoricalPrice(
+        PriceRecord(
             date=date(2020, 1, 1),
             record_type=RecordType.parse(RecordType.AUCTION),
             address=Address.parse("80 FIFTH STREET, ASCOT VALE, VIC 3032", country="australia"),
             price=100000,
         ),
-        HistoricalPrice(
+        PriceRecord(
             date=date(2020, 1, 1),
             record_type=RecordType.parse(RecordType.ENQUIRY),
             address=Address.parse("80 SAMPLE STREET, ASCOT VALE, VIC 3032", country="australia"),
             price=None,
         ),
-        HistoricalPrice(
+        PriceRecord(
             date=date(2020, 1, 1),
             record_type=RecordType.parse(" NO Sale"),
             address=Address.parse("80 ROSEBERRY STREET, NORTH MELBOURNE, VIC 3032", country="australia"),
             price=200000,
         ),
     ]
-    historical_records = HistoricalPrice.to_records(historical_prices)
+    historical_records = PriceRecord.to_records(historical_prices)
     records_json = {
         "unit_number": [None, None, None],
         "street_number": [80, 80, 80],

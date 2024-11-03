@@ -5,8 +5,8 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 
 from property_models.constants import (
     DATA_DIR,
-    HISTORICAL_RECORDS_CSV_FILE,
     POSTCODE_CSV_FILE,
+    PRICE_RECORDS_CSV_FILE,
     PROPERTIES_INFO_JSON_FILE,
     PropertyType,
     RecordType,
@@ -30,7 +30,7 @@ def test_postcodes_template_format():
 
 def test_historical_records_template_format():
     """Asserts you can format template correctly."""
-    file_path = HISTORICAL_RECORDS_CSV_FILE.format(
+    file_path = PRICE_RECORDS_CSV_FILE.format(
         country="test_country",
         state="test_state",
         suburb="test_suburb",

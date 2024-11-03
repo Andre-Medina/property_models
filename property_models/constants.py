@@ -15,13 +15,13 @@ if (DATA_DIR := os.environ.get("DATA_DIR")) is None:
     DATA_DIR = f"{root_dir}/property_models/data"
 
 POSTCODE_CSV_FILE: str = DATA_DIR + "/processed/{country}/suburb_to_postcode.csv"
-HISTORICAL_RECORDS_CSV_FILE: str = DATA_DIR + "/processed/{country}/{state}/{suburb}/records.csv"
+PRICE_RECORDS_CSV_FILE: str = DATA_DIR + "/processed/{country}/{state}/{suburb}/records.csv"
 PROPERTIES_INFO_JSON_FILE: str = DATA_DIR + "/processed/{country}/{state}/{suburb}/properties.json"
 
 
 ####### SCHEMAS #######
 
-HISTORICAL_RECORDS_SCHEMA = pl.Schema(
+PRICE_RECORDS_SCHEMA = pl.Schema(
     {
         "unit_number": pl.UInt16,
         "street_number": pl.UInt16,
