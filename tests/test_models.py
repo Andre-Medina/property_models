@@ -326,72 +326,83 @@ def test_property_type_from_stringified_dict():
     assert property_info_original != bad_property_info_reloaded
 
 
-def test_properties_info_read_csv():
+MOCK_PROPERTY_INFO_JSON_DATA = """[
+{"address": {"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
+"suburb": "NORTH MELBOURNE", "postcode": 3032, "state": "VIC", "country": "australia"},
+"beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
+"condition": null, "property_type": ["apartment", "sixties_brick"],
+"construction_date": "2000-01-01", "floors": 10},
+{"address": {"unit_number": 22, "street_number": 42, "street_name": "FDF STREET",
+"suburb": "WEST MELBOURNE", "postcode": 3032, "state": "VIC", "country": "australia"},
+"beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
+"condition": null, "property_type": ["apartment", "sixties_brick"],
+"construction_date": "2000-01-01", "floors": 1000},
+{"address": {"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
+"suburb": "NORTH MELBOURNE", "postcode": 3032, "state": "VIC", "country": "australia"},
+"beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
+"condition": null, "property_type": ["apartment", "None"],
+"construction_date": null, "floors": 100}
+]"""
+CORRECT_PROPERTY_INFO_JSON = {
+    "address": [
+        {
+            "unit_number": None,
+            "street_number": 80,
+            "street_name": "ROSEBERRY STREET",
+            "suburb": "NORTH MELBOURNE",
+            "postcode": 3032,
+            "state": "VIC",
+            "country": "australia",
+        },
+        {
+            "unit_number": 22,
+            "street_number": 42,
+            "street_name": "FDF STREET",
+            "suburb": "WEST MELBOURNE",
+            "postcode": 3032,
+            "state": "VIC",
+            "country": "australia",
+        },
+        {
+            "unit_number": None,
+            "street_number": 80,
+            "street_name": "ROSEBERRY STREET",
+            "suburb": "NORTH MELBOURNE",
+            "postcode": 3032,
+            "state": "VIC",
+            "country": "australia",
+        },
+    ],
+    "beds": [10, 10, 10],
+    "baths": [10, 10, 10],
+    "cars": [10, 10, 10],
+    "property_size_m2": [304.3999938964844, 304.3999938964844, 304.3999938964844],
+    "land_size_m2": [100.30000305175781, 100.30000305175781, 100.30000305175781],
+    "condition": [None, None, None],
+    "property_type": [["apartment", "sixties_brick"], ["apartment", "sixties_brick"], ["apartment", "None"]],
+    "construction_date": [date(2000, 1, 1), date(2000, 1, 1), None],
+    "floors": [10, None, 100],
+}
+
+
+@pytest.fixture(scope="function")
+def mock_property_info():
+    """Create a temporary file with the mock CSV data."""
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix="_aus_vic_suburb.csv") as temp_file:
+        temp_file.write(MOCK_PROPERTY_INFO_JSON_DATA)
+        temp_file_path = temp_file.name
+        temp_file_format = temp_file_path.split("_aus")[0] + "_{country}_{state}_{suburb}.csv"
+
+    original_template = constants.PROPERTIES_INFO_JSON_FILE
+    constants.PROPERTIES_INFO_JSON_FILE = temp_file_format
+    yield temp_file_path
+    constants.PROPERTIES_INFO_JSON_FILE = original_template
+    os.remove(temp_file_path)
+
+
+def test_properties_info_read_csv(mock_property_info):
     """Create csv contents and make sure the read function works."""
-    # noqa: E501
-    properties_info_json_file = b"""[
-    {"address": {"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
-    "suburb": "NORTH MELBOURNE", "postcode": 3032, "state": "VIC", "country": "australia"},
-    "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
-    "condition": null, "property_type": ["apartment", "sixties_brick"],
-    "construction_date": "2000-01-01", "floors": 10},
-    {"address": {"unit_number": 22, "street_number": 42, "street_name": "FDF STREET",
-    "suburb": "WEST MELBOURNE", "postcode": 3032, "state": "VIC", "country": "australia"},
-    "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
-    "condition": null, "property_type": ["apartment", "sixties_brick"],
-    "construction_date": "2000-01-01", "floors": 1000},
-    {"address": {"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
-    "suburb": "NORTH MELBOURNE", "postcode": 3032, "state": "VIC", "country": "australia"},
-    "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
-    "condition": null, "property_type": ["apartment", "None"],
-    "construction_date": null, "floors": 100}
-    ]"""
-
-    with tempfile.NamedTemporaryFile(delete=True) as temp_file:
-        temp_file.write(properties_info_json_file)
-        temp_file.seek(0)
-        data_read = PropertyInfo.read_json(temp_file)
-
-    properties_info_json = {
-        "address": [
-            {
-                "unit_number": None,
-                "street_number": 80,
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "NORTH MELBOURNE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": "australia",
-            },
-            {
-                "unit_number": 22,
-                "street_number": 42,
-                "street_name": "FDF STREET",
-                "suburb": "WEST MELBOURNE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": "australia",
-            },
-            {
-                "unit_number": None,
-                "street_number": 80,
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "NORTH MELBOURNE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": "australia",
-            },
-        ],
-        "beds": [10, 10, 10],
-        "baths": [10, 10, 10],
-        "cars": [10, 10, 10],
-        "property_size_m2": [304.3999938964844, 304.3999938964844, 304.3999938964844],
-        "land_size_m2": [100.30000305175781, 100.30000305175781, 100.30000305175781],
-        "condition": [None, None, None],
-        "property_type": [["apartment", "sixties_brick"], ["apartment", "sixties_brick"], ["apartment", "None"]],
-        "construction_date": [date(2000, 1, 1), date(2000, 1, 1), None],
-        "floors": [10, None, 100],
-    }
-    data_json = pl.DataFrame(properties_info_json)
+    data_read = PropertyInfo.read_json(mock_property_info)
+    data_json = pl.DataFrame(CORRECT_PROPERTY_INFO_JSON)
 
     pl.testing.assert_frame_equal(data_read.sort("floors"), data_json.sort("floors"), check_dtypes=False)
