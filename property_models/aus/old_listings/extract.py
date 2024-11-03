@@ -1,6 +1,30 @@
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
+
+from property_models.aus.old_listings.constants import OldListingsURL
+
+#### GENERAL DATA ##########
+
+
+def get_page_counts(
+    *,
+    driver: WebDriver,
+    old_listing_url: OldListingsURL,
+) -> int:
+    """Get total page count."""
+    page_url_formatted = old_listing_url.format()
+    driver.get(page_url_formatted)
+
+    page_navigation = driver.find_element(By.CLASS_NAME, "pagination")
+    last_navigation = page_navigation.find_elements(By.TAG_NAME, "li")[-2]
+    page_count = int(last_navigation.text)
+
+    return page_count
+
+
+##### EXTRACT DATA #########
 
 
 def extract_info(listing: WebElement):
