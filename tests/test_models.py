@@ -340,7 +340,7 @@ def test_properties_info_write(mock_property_info):
 ##### INTEGRATION #############
 
 
-def test_join_propeties_info_with_price_records(mock_property_info, mock_price_records):
+def test_address_join_on(mock_property_info, mock_price_records):  # noqa: ARG001
     """Test joining two of the main dataframes together works."""
     properties_info_mocked = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
     price_records_mocked = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
@@ -348,3 +348,23 @@ def test_join_propeties_info_with_price_records(mock_property_info, mock_price_r
     combined_data = Address.join_on(properties_info_mocked, price_records_mocked)
 
     assert not combined_data.is_empty()
+    assert set(combined_data.columns) == set(properties_info_mocked.columns) | set(price_records_mocked.columns)
+
+    pl.testing.assert_frame_equal(
+        combined_data.select(properties_info_mocked.columns).sort("floors"),
+        properties_info_mocked.sort("floors"),
+    )
+
+    pl.testing.assert_frame_equal(
+        combined_data.select(price_records_mocked.columns).sort("price"),
+        price_records_mocked.sort("price"),
+    )
+
+
+def test_address_filter_on(mock_property_info):  # noqa: ARG001
+    """Test you can filter by an address."""
+    properties_info = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    specific_address = properties_info["address"].item(0)
+
+    properties_info.filter(pl.col("address") == specific_address)
+    properties_info.filter(pl.col("address").is_in([specific_address]))

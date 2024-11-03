@@ -112,15 +112,6 @@ class Address(BaseModel):
 
         return address_object
 
-    # @staticmethod
-    # def filter(dataframe: pl.DataFrame, address: "Address" | None) -> pl.DataFrame:
-    #     """Filter a dataframe based on an address."""
-    #     cls.check_address_column(dataframe)
-
-    #     dataframe_filtered = (
-    #         dataframe
-    #     )
-
     @classmethod
     def join_on(cls, dataframe_1: pl.DataFrame, dataframe_2: pl.DataFrame, /) -> pl.DataFrame:
         """Join two dataframes with a `pl.Struct` `'address'` column on the addresses."""
