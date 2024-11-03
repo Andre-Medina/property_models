@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 from datetime import date
 
@@ -6,8 +7,67 @@ import polars as pl
 import polars.testing
 import pytest
 
+from property_models import constants
 from property_models.constants import PropertyCondition, PropertyType, RecordType
-from property_models.models import Address, PriceRecord, PropertyInfo
+from property_models.models import (
+    Address,
+    Postcode,  # Import the Postcode class from your module
+    PriceRecord,
+    PropertyInfo,
+)
+
+#### POSTCODES ##########
+
+# Sample CSV data for the test
+MOCK_CSV_DATA = """postcode,suburb
+200,australian_national_university
+2540,jervis_bay
+2600,deakin_west
+2600,duntroon
+"""
+
+
+@pytest.fixture(scope="function")
+def mock_postcode_file():
+    """Create a temporary file with the mock CSV data."""
+    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix="_aus.csv") as temp_file:
+        temp_file.write(MOCK_CSV_DATA)
+        temp_file_path = temp_file.name
+        temp_file_format = temp_file_path.split("_aus")[0] + "_{country}.csv"
+
+    original_template = constants.POSTCODE_CSV_FILE
+    constants.POSTCODE_CSV_FILE = temp_file_format
+
+    yield temp_file_format
+
+    constants.POSTCODE_CSV_FILE = original_template
+    os.remove(temp_file_path)
+
+
+def test_find_suburb(mock_postcode_file):
+    """Test the find_suburb method for a known postcode."""
+    suburb = Postcode.find_suburb(postcode=200, country="aus")
+    assert suburb == "australian_national_university"
+
+    suburb = Postcode.find_suburb(postcode=2540, country="aus")
+    assert suburb == "jervis_bay"
+
+    suburb = Postcode.find_suburb(postcode=2600, country="aus")
+    assert suburb == "deakin_west"
+
+
+def test_find_postcode(mock_postcode_file):
+    """Test the find_postcode method for a known suburb."""
+    postcode = Postcode.find_postcode(suburb="australian_national_university", country="aus")
+    assert postcode == 200
+
+    postcode = Postcode.find_postcode(suburb="jervis_bay", country="aus")
+    assert postcode == 2540
+    postcode = Postcode.find_postcode(suburb="duntroon", country="aus")
+    assert postcode == 2600
+    postcode = Postcode.find_postcode(suburb="deakin_west", country="aus")
+    assert postcode == 2600
+
 
 ##### ADDRESSES ###############
 
@@ -24,7 +84,7 @@ from property_models.models import Address, PriceRecord, PropertyInfo
                 "street_number": 42,
                 "street_name": "EXAMPLE STREET",
                 "suburb": "STANMORE",
-                "post_code": 2048,
+                "postcode": 2048,
                 "state": "NSW",
                 "country": "australia",
             },
@@ -38,7 +98,7 @@ from property_models.models import Address, PriceRecord, PropertyInfo
                 "street_number": 67,
                 "street_name": "ROSEBERRY STREET",
                 "suburb": "ASCOT VALE",
-                "post_code": 3032,
+                "postcode": 3032,
                 "state": "VIC",
                 "country": "australia",
             },
@@ -52,7 +112,7 @@ from property_models.models import Address, PriceRecord, PropertyInfo
                 "street_number": 80,
                 "street_name": "ROSEBERRY STREET",
                 "suburb": "ASCOT VALE",
-                "post_code": 3032,
+                "postcode": 3032,
                 "state": "VIC",
                 "country": "australia",
             },
@@ -118,7 +178,7 @@ def test_historical_price_read_csv():
     with tempfile.NamedTemporaryFile(delete=True) as temp_file:
         temp_file.write(records_csv)
         temp_file.seek(0)
-        data_csv = PriceRecord.read_csv(records_csv)
+        data_csv = PriceRecord._read_csv(records_csv)
 
     records_json = {
         "unit_number": [None, 10, None, None],
@@ -258,17 +318,17 @@ def test_properties_info_read_csv():
     # noqa: E501
     properties_info_json_file = b"""[
     {"address": {"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
-    "suburb": "NORTH MELBOURNE", "post_code": 3032, "state": "VIC", "country": "australia"},
+    "suburb": "NORTH MELBOURNE", "postcode": 3032, "state": "VIC", "country": "australia"},
     "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
     "condition": null, "property_type": ["apartment", "sixties_brick"],
     "construction_date": "2000-01-01", "floors": 10},
     {"address": {"unit_number": 22, "street_number": 42, "street_name": "FDF STREET",
-    "suburb": "WEST MELBOURNE", "post_code": 3032, "state": "VIC", "country": "australia"},
+    "suburb": "WEST MELBOURNE", "postcode": 3032, "state": "VIC", "country": "australia"},
     "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
     "condition": null, "property_type": ["apartment", "sixties_brick"],
     "construction_date": "2000-01-01", "floors": 1000},
     {"address": {"unit_number": null, "street_number": 80, "street_name": "ROSEBERRY STREET",
-    "suburb": "NORTH MELBOURNE", "post_code": 3032, "state": "VIC", "country": "australia"},
+    "suburb": "NORTH MELBOURNE", "postcode": 3032, "state": "VIC", "country": "australia"},
     "beds": 10, "baths": 10, "cars": 10, "property_size_m2": 304.4, "land_size_m2": 100.3,
     "condition": null, "property_type": ["apartment", "None"],
     "construction_date": null, "floors": 100}
@@ -286,7 +346,7 @@ def test_properties_info_read_csv():
                 "street_number": 80,
                 "street_name": "ROSEBERRY STREET",
                 "suburb": "NORTH MELBOURNE",
-                "post_code": 3032,
+                "postcode": 3032,
                 "state": "VIC",
                 "country": "australia",
             },
@@ -295,7 +355,7 @@ def test_properties_info_read_csv():
                 "street_number": 42,
                 "street_name": "FDF STREET",
                 "suburb": "WEST MELBOURNE",
-                "post_code": 3032,
+                "postcode": 3032,
                 "state": "VIC",
                 "country": "australia",
             },
@@ -304,7 +364,7 @@ def test_properties_info_read_csv():
                 "street_number": 80,
                 "street_name": "ROSEBERRY STREET",
                 "suburb": "NORTH MELBOURNE",
-                "post_code": 3032,
+                "postcode": 3032,
                 "state": "VIC",
                 "country": "australia",
             },

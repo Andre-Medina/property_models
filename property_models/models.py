@@ -1,4 +1,5 @@
 from datetime import date
+from functools import lru_cache
 from typing import Literal
 
 import polars as pl
@@ -6,7 +7,9 @@ from au_address_parser import AbAddressUtility
 from pydantic import BaseModel, ConfigDict
 from tqdm import tqdm
 
+from property_models import constants
 from property_models.constants import (
+    POSTCODE_SCHEMA,
     PRICE_RECORDS_CSV_FILE,
     PRICE_RECORDS_SCHEMA,
     PROPERTIES_INFO_JSON_FILE,
@@ -19,6 +22,41 @@ from property_models.constants import (
 ALLOWED_COUNTRIES = Literal["australia"]
 
 
+####### POSTCODES #####################
+
+
+class Postcode:
+    """Class to hold postcodes for different countries and convert between postcodes and suburbs."""
+
+    @lru_cache
+    @staticmethod
+    def read_postcodes(*, country: str) -> pl.DataFrame:
+        """Read postcode for given country."""
+        postcode_file = constants.POSTCODE_CSV_FILE.format(country=country)
+
+        postcodes = pl.read_csv(postcode_file, schema=POSTCODE_SCHEMA)
+
+        return postcodes
+
+    @classmethod
+    def find_suburb(cls, *, postcode: int, country: str) -> str:
+        """Find suburb name for the given postcode."""
+        postcodes = cls.read_postcodes(country=country)
+
+        suburb = postcodes.filter(pl.col("postcode") == postcode).select("suburb").item(0, 0)
+
+        return suburb
+
+    @classmethod
+    def find_postcode(cls, *, suburb: str, country: str) -> int:
+        """Find postcode name for the given suburb."""
+        postcodes = cls.read_postcodes(country=country)
+
+        suburb = postcodes.filter(pl.col("suburb") == suburb).select("postcode").item(0, 0)
+
+        return suburb
+
+
 ####### ADDRESSES ########################
 class Address(BaseModel):
     """Dataclass to hold information about a single physical address location."""
@@ -27,7 +65,7 @@ class Address(BaseModel):
     street_number: int
     street_name: str
     suburb: str
-    post_code: int
+    postcode: int
     state: str
     country: str
 
@@ -53,7 +91,7 @@ class Address(BaseModel):
             street_number=int(parsed_address._number_first),
             street_name=parsed_address._street,
             suburb=parsed_address._locality,
-            post_code=int(parsed_address._post),
+            postcode=int(parsed_address._post),
             state=parsed_address._state,
             country="australia",
         )
@@ -78,11 +116,22 @@ class PriceRecord(BaseModel):
             state=state,
             suburb=suburb,
         )
-        price_records = cls.read_csv(price_records_file)
-        return price_records
+        price_records_raw = cls._read_csv(price_records_file)
+
+        # price_records_formatted = (
+        #     price_records_raw
+        #     .select(
+        #         pl.Struct(
+
+        #         )
+
+        #     )
+        # )
+
+        return price_records_raw
 
     @classmethod
-    def read_csv(_cls, file: str, /) -> pl.DataFrame:
+    def _read_csv(_cls, file: str, /) -> pl.DataFrame:
         """Read and validate contents of file containing several records."""
         price_records = pl.read_csv(
             file,
@@ -98,6 +147,17 @@ class PriceRecord(BaseModel):
         )
 
         return price_records
+
+    @classmethod
+    def write(cls, price_records: pl.DataFrame, *, country: str, state: str, suburb: str) -> None:
+        """Write records to a csv file."""
+        price_records_file = PRICE_RECORDS_CSV_FILE.format(
+            country=country,
+            state=state,
+            suburb=suburb,
+        )
+
+        price_records.write_csv(price_records_file)
 
     @classmethod
     def to_records(cls, price_record_list: list["PriceRecord"], /) -> pl.DataFrame:
@@ -178,7 +238,7 @@ class PropertyInfo(BaseModel):
                 'street_number': 80,
                 'street_name': 'ROSEBERRY STREET',
                 'suburb': 'NORTH MELBOURNE',
-                'post_code': 3032,
+                'postcode': 3032,
                 'state': 'VIC',
                 'country': 'australia',
             },

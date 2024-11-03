@@ -38,7 +38,7 @@ ADDRESS_SCHEMA = pl.Schema(
         "street_number": pl.UInt16,
         "street_name": pl.String,
         "suburb": pl.String,
-        "post_code": pl.UInt16,
+        "postcode": pl.UInt16,
         "state": pl.String,
         "country": pl.String,
     }
@@ -56,6 +56,13 @@ PROPERTIES_INFO_SCHEMA = pl.Schema(
         "property_type": pl.List(pl.String),
         "construction_date": pl.Date(),
         "floors": pl.UInt8,
+    }
+)
+
+POSTCODE_SCHEMA = pl.Schema(
+    {
+        "postcode": pl.UInt16,
+        "suburb": pl.String,
     }
 )
 
