@@ -1,6 +1,6 @@
 import pytest
 
-from property_models.aus.old_listings.constants import OldListingsURL
+from property_models.aus.old_listings.constants import OldListingURL
 from property_models.dev_utils.fixtures import (
     TEST_POSTCODE,
     TEST_STATE,
@@ -10,7 +10,7 @@ from property_models.dev_utils.fixtures import (
 
 def test_old_listing_url(mock_postcodes) -> str:
     """Test `OldListingURL` works."""
-    old_listing_url = OldListingsURL(
+    old_listing_url = OldListingURL(
         state=TEST_STATE,
         suburb=TEST_SUBURB,
         postcode=TEST_POSTCODE,
@@ -21,7 +21,7 @@ def test_old_listing_url(mock_postcodes) -> str:
     )
 
     with pytest.raises(ValueError):
-        OldListingsURL(
+        OldListingURL(
             state=TEST_STATE,
             suburb=TEST_SUBURB,
             postcode=TEST_POSTCODE + 1,

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, model_validator
 from typing_extensions import Self
 
-from property_models.models import Postcode
+from property_models.models import Postcode  # Address, Postcode, PriceRecord, PropertyInfo
 
 OLD_LISTINGS_BASE_URL = "https://www.oldlistings.com.au/"
 OLD_LISTINGS_URL = (
@@ -10,7 +10,8 @@ OLD_LISTINGS_URL = (
 )
 
 
-class OldListingsURL(BaseModel):
+##### OLD LISTING URL ########
+class OldListingURL(BaseModel):
     """Model to hold inputs."""
 
     state: str
@@ -38,16 +39,44 @@ class OldListingsURL(BaseModel):
 
         return url
 
-    def next_page(self) -> "OldListingsURL":
+    def next_page(self) -> "OldListingURL":
         """Move to the next page."""
         url_kwargs_raw = self.model_dump()
         url_kwargs_updated = url_kwargs_raw | {"page": url_kwargs_raw["page"] + 1}
         new_url = self.__class__(**url_kwargs_updated)
         return new_url
 
-    def to_page(self, page_number) -> "OldListingsURL":
+    def to_page(self, page_number) -> "OldListingURL":
         """Move to certain page."""
         url_kwargs_raw = self.model_dump()
         url_kwargs_updated = url_kwargs_raw | {"page": page_number}
         new_url = self.__class__(**url_kwargs_updated)
         return new_url
+
+
+##### OLD LISTING DATA #####
+
+
+class RawPropertyInfo(BaseModel):
+    """Model for raw info for a property."""
+
+    address: str
+    beds: str
+    cars: str
+    baths: str
+    property_type: str
+
+
+class RawPriceRecord(BaseModel):
+    """Model to hold a raw price record."""
+
+    date: str
+    market_info: str
+
+
+class RawListing(BaseModel):
+    """Model to hold raw listing from Old Listing ."""
+
+    general_info: RawPropertyInfo
+    recent_price: RawPriceRecord
+    historical_prices: list[RawPriceRecord]
