@@ -1,22 +1,30 @@
-import datetime
+from datetime import date
 
 import pytest
 
-from property_models.aus.old_listings.constants import OldListingURL
+from property_models.aus.old_listings.constants import (
+    OldListingURL,
+    RawListing,
+    RawPriceRecord,
+    RawPropertyInfo,
+)
 from property_models.aus.old_listings.parse import parse_date, parse_price, parse_record_type
-from property_models.constants import RecordType
+from property_models.constants import PropertyType, RecordType
 from property_models.dev_utils.fixtures import (
+    TEST_ADDRESSES,
+    TEST_ADDRESSES_STRING,
     TEST_POSTCODE,
     TEST_STATE,
     TEST_SUBURB,
 )
+from property_models.models import Address, PriceRecord, PropertyInfo
 
 
 def test_parse_date():
     """Test the parsing function for old listings."""
-    assert parse_date("March 2000") == datetime.date(2000, 3, 1)
-    assert parse_date("July 2019") == datetime.date(2019, 7, 1)
-    assert parse_date("December 2025") == datetime.date(2025, 12, 1)
+    assert parse_date("March 2000") == date(2000, 3, 1)
+    assert parse_date("July 2019") == date(2019, 7, 1)
+    assert parse_date("December 2025") == date(2025, 12, 1)
 
 
 def test_parse_price():
@@ -75,23 +83,47 @@ def test_old_listing_url(mock_postcodes):
     assert old_listing_url_2.page == different_page
 
 
-# def test_old_listing_parsing_integration():
-#     """Test generating old listing data and parsing it."""
+def test_parsing_integration():
+    """Test generating old listing data and parsing it."""
+    raw_listing = RawListing(
+        general_info=RawPropertyInfo(
+            address=TEST_ADDRESSES_STRING[0], beds="1", cars="1", baths="1", property_type="Unit/apmt"
+        ),
+        recent_price=RawPriceRecord(date=" March 2019", market_info="$380,000"),
+        historical_prices=[
+            RawPriceRecord(date="March 2019", market_info="$380,000 - $420,000"),
+            RawPriceRecord(date="June 2013", market_info="Auction"),
+            RawPriceRecord(date="June 2013", market_info="$320,000 - $340,000"),
+            RawPriceRecord(date="June 2013", market_info="$320,000 - $340,000 Auction"),
+            RawPriceRecord(date="August 2011", market_info="Private Sale"),
+        ],
+    )
 
-#     RawListing(
-#         general_info=RawPropertyInfo(
-#             address='2/68 ORMOND ROAD, ASCOT VALE, VIC 3032',
-#             beds='2',
-#             cars='1',
-#             baths='1',
-#             property_type='Unit/apmt'
-#         ),
-#         recent_price=RawPriceRecord(date=' March 2019', market_info='$380,000'),
-#         historical_prices=[
-#             RawPriceRecord(date='March 2019', market_info='$380,000 - $415,000'),
-#             RawPriceRecord(date='June 2013', market_info='Auction'),
-#             RawPriceRecord(date='June 2013', market_info='$315,000 - $345,000'),
-#             RawPriceRecord(date='June 2013', market_info='$315,000 - $345,000 Auction'),
-#             RawPriceRecord(date='August 2011', market_info='Private Sale'),
-#         ],
-#     )
+    correct_address = Address(**TEST_ADDRESSES[0])
+
+    correct_property_info = PropertyInfo(
+        address=correct_address,
+        baths=1,
+        beds=1,
+        cars=1,
+        property_size_m2=None,
+        land_size_m2=None,
+        condition=None,
+        property_type=PropertyType.APARTMENT.GENERAL.value,
+        construction_date=None,
+        floors=None,
+    )
+
+    assert str(raw_listing.to_property_info()) == str(correct_property_info)
+    assert raw_listing.to_property_info() == correct_property_info
+
+    correct_price_records = [
+        PriceRecord(address=correct_address, date=date(2019, 3, 1), record_type=None, price=380000),
+        PriceRecord(address=correct_address, date=date(2019, 3, 1), record_type=None, price=400000),
+        PriceRecord(address=correct_address, date=date(2013, 6, 1), record_type=RecordType.AUCTION, price=None),
+        PriceRecord(address=correct_address, date=date(2013, 6, 1), record_type=None, price=330000),
+        PriceRecord(address=correct_address, date=date(2013, 6, 1), record_type=RecordType.AUCTION, price=330000),
+        PriceRecord(address=correct_address, date=date(2011, 8, 1), record_type=RecordType.PRIVATE_SALE, price=None),
+    ]
+
+    assert raw_listing.to_price_records() == correct_price_records

@@ -256,11 +256,16 @@ class PropertyType(tuple[str, str]):
         ValueError, If bad value is passed.
         NotImplementedError, If called with un implemented parameters.
         """
-        try:
+        with suppress(AttributeError):
             parsed = cls(property_type.value)
             return parsed
-        except Exception:  # noqa: B904
-            raise NotImplementedError  # noqa: B904
+        property_type_clean = property_type.lower().strip().replace(" ", "_")
+
+        # if ('unit' in property_type_clean) | ("apmt" in property_type):
+        if property_type_clean == "unit/apmt":
+            return cls.APARTMENT.GENERAL.value
+
+        raise NotImplementedError  # noqa: B904
 
 
 #### Property condition #########

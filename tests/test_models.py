@@ -11,6 +11,8 @@ from property_models.dev_utils.fixtures import (
     CORRECT_PROPERTY_INFO_JSON,
     CORRECT_RECORDS_COMPRESSED_JSON,
     CORRECT_RECORDS_JSON,
+    TEST_ADDRESSES,
+    TEST_ADDRESSES_STRING,
     TEST_COUNTRY,
     TEST_POSTCODE,
     TEST_STATE,
@@ -84,7 +86,7 @@ def test_find_postcode(mock_postcodes):
                 "unit_number": 7,
                 "street_number": 67,
                 "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT VALE",
+                "suburb": "ASCOT_VALE",
                 "postcode": 3032,
                 "state": "VIC",
                 "country": TEST_COUNTRY,
@@ -98,7 +100,7 @@ def test_find_postcode(mock_postcodes):
                 "unit_number": None,
                 "street_number": 80,
                 "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT VALE",
+                "suburb": "ASCOT_VALE",
                 "postcode": 3032,
                 "state": "VIC",
                 "country": TEST_COUNTRY,
@@ -112,6 +114,19 @@ def test_address_parsing(_name, address, country, correct_json):
 
     for field, value in address_model.model_dump().items():
         assert correct_json[field] == value
+
+
+def test_address_parsing_from_dict():
+    """Test creating address from string vs dict."""
+    address_parsed = Address.parse(TEST_ADDRESSES_STRING[0], country=TEST_COUNTRY)
+    address_kwargs = Address(**TEST_ADDRESSES[0])
+    assert address_parsed == address_kwargs
+    address_parsed = Address.parse(TEST_ADDRESSES_STRING[1], country=TEST_COUNTRY)
+    address_kwargs = Address(**TEST_ADDRESSES[1])
+    assert address_parsed == address_kwargs
+    address_parsed = Address.parse(TEST_ADDRESSES_STRING[2], country=TEST_COUNTRY)
+    address_kwargs = Address(**TEST_ADDRESSES[2])
+    assert address_parsed == address_kwargs
 
 
 ###### HISTORICAL PRICES ##############
@@ -175,7 +190,7 @@ def test_historical_price_to_records():
             price=200000,
         ),
     ]
-    historical_records = PriceRecord.to_records(historical_prices)
+    historical_records = PriceRecord.to_dataframe(historical_prices)
     records_json = {
         "unit_number": [None, None, None],
         "street_number": [80, 80, 80],

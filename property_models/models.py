@@ -94,13 +94,13 @@ class Address(BaseModel):
     @classmethod
     def _parse_australian_address(cls, address) -> "Address":
         """Parses Australia specific address."""
-        parsed_address = AbAddressUtility(address)
+        parsed_address = AbAddressUtility(address.replace("_", " "))
 
         address_object = cls(
             unit_number=int(parsed_address._flat) if parsed_address._flat else None,
             street_number=int(parsed_address._number_first),
             street_name=parsed_address._street,
-            suburb=parsed_address._locality,
+            suburb=parsed_address._locality.replace(" ", "_"),
             postcode=int(parsed_address._post),
             state=parsed_address._state,
             country="AUS",
@@ -232,7 +232,7 @@ class PriceRecord(BaseModel):
             price_records_compressed.write_csv(open_file)
 
     @classmethod
-    def to_records(cls, price_record_list: list["PriceRecord"], /) -> pl.DataFrame:
+    def to_dataframe(cls, price_record_list: list["PriceRecord"], /) -> pl.DataFrame:
         """Convert list of price records to a dataframe."""
         price_records_frame = (
             pl.DataFrame(price_record_list)

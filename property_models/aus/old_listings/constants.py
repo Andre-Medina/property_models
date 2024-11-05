@@ -2,6 +2,7 @@ from pydantic import BaseModel, model_validator
 from typing_extensions import Self
 
 from property_models.aus.old_listings.parse import parse_date, parse_price, parse_record_type
+from property_models.constants import PropertyType
 from property_models.models import (
     Address,
     Postcode,  # Address, Postcode, PriceRecord, PropertyInfo
@@ -87,7 +88,7 @@ class RawListing(BaseModel):
     recent_price: RawPriceRecord
     historical_prices: list[RawPriceRecord]
 
-    def process_property_info(self) -> PropertyInfo:
+    def to_property_info(self) -> PropertyInfo:
         """Extract the property info from the listing."""
         property_info = PropertyInfo(
             address=Address.parse(self.general_info.address, country="AUS"),
@@ -97,14 +98,14 @@ class RawListing(BaseModel):
             property_size_m2=None,
             land_size_m2=None,
             condition=None,
-            property_type=None,
+            property_type=PropertyType.parse(self.general_info.property_type, errors="raise"),
             construction_date=None,
             floors=None,
         )
 
         return property_info
 
-    def process_price_records(self) -> list[PriceRecord]:
+    def to_price_records(self) -> list[PriceRecord]:
         """Extract the price records from the listing."""
         address = Address.parse(self.general_info.address, country="AUS")
 
