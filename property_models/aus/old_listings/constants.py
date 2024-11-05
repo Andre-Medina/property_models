@@ -1,7 +1,13 @@
 from pydantic import BaseModel, model_validator
 from typing_extensions import Self
 
-from property_models.models import Postcode  # Address, Postcode, PriceRecord, PropertyInfo
+from property_models.aus.old_listings.parse import parse_date, parse_price, parse_record_type
+from property_models.models import (
+    Address,
+    Postcode,  # Address, Postcode, PriceRecord, PropertyInfo
+    PriceRecord,
+    PropertyInfo,
+)
 
 OLD_LISTINGS_BASE_URL = "https://www.oldlistings.com.au/"
 OLD_LISTINGS_URL = (
@@ -75,8 +81,49 @@ class RawPriceRecord(BaseModel):
 
 
 class RawListing(BaseModel):
-    """Model to hold raw listing from Old Listing ."""
+    """Model to hold raw listing from Old Listing."""
 
     general_info: RawPropertyInfo
     recent_price: RawPriceRecord
     historical_prices: list[RawPriceRecord]
+
+    def process_property_info(self) -> PropertyInfo:
+        """Extract the property info from the listing."""
+        property_info = PropertyInfo(
+            address=Address.parse(self.general_info.address, country="AUS"),
+            beds=int(self.general_info.beds),
+            baths=int(self.general_info.baths),
+            cars=int(self.general_info.cars),
+            property_size_m2=None,
+            land_size_m2=None,
+            condition=None,
+            property_type=None,
+            construction_date=None,
+            floors=None,
+        )
+
+        return property_info
+
+    def process_price_records(self) -> list[PriceRecord]:
+        """Extract the price records from the listing."""
+        address = Address.parse(self.general_info.address, country="AUS")
+
+        recent_price = PriceRecord(
+            address=address,
+            date=parse_date(self.recent_price.date),
+            record_type=parse_record_type(self.recent_price.market_info),
+            price=parse_price(self.recent_price.market_info),
+        )
+
+        price_records = [recent_price]
+
+        for historical_price in self.historical_prices:
+            price_record = PriceRecord(
+                address=address,
+                date=parse_date(historical_price.date),
+                record_type=parse_record_type(historical_price.market_info),
+                price=parse_price(historical_price.market_info),
+            )
+            price_records.append(price_record)
+
+        return price_records

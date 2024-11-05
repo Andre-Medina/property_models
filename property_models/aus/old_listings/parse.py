@@ -1,60 +1,22 @@
 import datetime
 import re
 
-from property_models.aus.old_listings.constants import RawListing
 from property_models.constants import RecordType
-from property_models.models import Address, PriceRecord, PropertyInfo
-
-
-##### PROCESS RAW LISTING #####
-def process_property_info(raw_listing: RawListing) -> PropertyInfo:
-    """Extract the property info from the listing."""
-    property_info = PropertyInfo(
-        address=Address.parse(raw_listing.general_info.address, country="AUS"),
-        beds=int(raw_listing.general_info.beds),
-        baths=int(raw_listing.general_info.baths),
-        cars=int(raw_listing.general_info.cars),
-        property_size_m2=None,
-        land_size_m2=None,
-        condition=None,
-        property_type=None,
-        construction_date=None,
-        floors=None,
-    )
-
-    return property_info
-
-
-def process_price_records(raw_listing: RawListing) -> list[PriceRecord]:
-    """Extract the price records from the listing."""
-    address = Address.parse(raw_listing.general_info.address, country="AUS")
-
-    recent_price = PriceRecord(
-        address=address,
-        date=parse_date(raw_listing.recent_price.date),
-        record_type=parse_record_type(raw_listing.recent_price.market_info),
-        price=parse_price(raw_listing.recent_price.market_info),
-    )
-
-    price_records = [recent_price]
-
-    for historical_price in raw_listing.historical_prices:
-        price_record = PriceRecord(
-            address=address,
-            date=parse_date(historical_price.date),
-            record_type=parse_record_type(historical_price.market_info),
-            price=parse_price(historical_price.market_info),
-        )
-        price_records.append(price_record)
-
-    return price_records
-
 
 ###### PARSE PRICES AND RECORD TYPES ##########
 
 
 def parse_date(date_raw: str) -> datetime.date:
-    """Parse a date."""
+    """Parse a date.
+
+    E.g
+    ```
+    "March 2000" -> date(2000, 3, 1)
+    "July 2019" -> date(2019, 7, 1)
+    "December 2025" -> date(2025, 12, 1)
+    ```
+
+    """
     date_clean = datetime.datetime.strptime(date_raw.strip(), "%B %Y").date()
     return date_clean
 
