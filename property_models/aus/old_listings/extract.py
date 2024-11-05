@@ -5,6 +5,7 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 
 from property_models.aus.old_listings.constants import OldListingURL, RawListing, RawPriceRecord, RawPropertyInfo
+from property_models.utils import return_if_no_element
 
 #### GENERAL DATA ##########
 
@@ -48,12 +49,17 @@ def extract_listing_data(listing: WebElement, state: str, postcode: int) -> RawL
     except:  # noqa: E722
         # TODO: deal with exceptions
         print(address, "FAILED")
+        general_info = extract_listing_general(information_list[0], state=state, postcode=postcode)
+        recent_price = extract_listing_prices(information_list[1])
+        historical_prices = extract_listing_historical(information_list[2])
 
 
 def extract_listing_prices(information: WebElement) -> RawPriceRecord:
     """Extract recent prices."""
     date = information.find_element(By.TAG_NAME, "span").text.split(":")[-1]
-    market_info = information.find_element(By.TAG_NAME, "h3").text.split(" ")[0]
+    market_info = return_if_no_element(
+        lambda: information.find_element(By.TAG_NAME, "h3").text.split(" ")[0], default_value="Expressions of Interest"
+    )
 
     raw_price_record = RawPriceRecord(date=date, market_info=market_info)
 
@@ -62,11 +68,13 @@ def extract_listing_prices(information: WebElement) -> RawPriceRecord:
 
 def extract_listing_general(information: WebElement, state: str, postcode: int) -> RawPropertyInfo:
     """Extract general information."""
-    address = f"{information.find_element(By.TAG_NAME, "h2").text}, {state} {postcode}"
-    beds = information.find_element(By.CLASS_NAME, "bed").text
-    baths = information.find_element(By.CLASS_NAME, "bath").text
-    cars = information.find_element(By.CLASS_NAME, "car").text
-    property_type = information.find_element(By.CLASS_NAME, "type").text
+    address = return_if_no_element(lambda: f"{information.find_element(By.TAG_NAME, "h2").text}, {state} {postcode}")
+    beds = return_if_no_element(lambda: information.find_element(By.CLASS_NAME, "bed").text)
+    baths = return_if_no_element(lambda: information.find_element(By.CLASS_NAME, "bath").text)
+    cars = return_if_no_element(lambda: information.find_element(By.CLASS_NAME, "car").text)
+    land_size_m2 = return_if_no_element(lambda: information.find_element(By.CLASS_NAME, "land").text)
+
+    property_type = return_if_no_element(lambda: information.find_element(By.CLASS_NAME, "type").text)
 
     raw_property_info = RawPropertyInfo(
         address=address,
@@ -74,6 +82,7 @@ def extract_listing_general(information: WebElement, state: str, postcode: int) 
         baths=baths,
         cars=cars,
         property_type=property_type,
+        land_size_m2=land_size_m2,
     )
 
     return raw_property_info

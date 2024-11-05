@@ -41,7 +41,7 @@ class OldListingURL(BaseModel):
         """Convert inputs to url to correct page."""
         url_kwargs_raw = self.model_dump()
 
-        url_kwargs = url_kwargs_raw | {"suburb": url_kwargs_raw["suburb"].replace(" ", "+").lower()}
+        url_kwargs = url_kwargs_raw | {"suburb": url_kwargs_raw["suburb"].replace("_", "+").replace(" ", "+").lower()}
         url = OLD_LISTINGS_URL.format(**url_kwargs)
 
         return url
@@ -67,11 +67,12 @@ class OldListingURL(BaseModel):
 class RawPropertyInfo(BaseModel):
     """Model for raw info for a property."""
 
-    address: str
-    beds: str
-    cars: str
-    baths: str
-    property_type: str
+    address: str | None
+    beds: str | None
+    cars: str | None
+    baths: str | None
+    property_type: str | None
+    land_size_m2: str | None
 
 
 class RawPriceRecord(BaseModel):
@@ -90,6 +91,10 @@ class RawListing(BaseModel):
 
     def to_property_info(self) -> PropertyInfo:
         """Extract the property info from the listing."""
+        # FIXME:
+        if self.general_info.land_size_m2 is not None:
+            print(f"Cannot process land: {self.general_info.land_size_m2!r}")
+
         property_info = PropertyInfo(
             address=Address.parse(self.general_info.address, country="AUS"),
             beds=int(self.general_info.beds),

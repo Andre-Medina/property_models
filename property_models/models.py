@@ -13,6 +13,7 @@ from property_models.constants import (
     ADDRESS_SCHEMA,
     ALLOWED_COUNTRIES,
     POSTCODE_SCHEMA,
+    PRICE_RECORDS_COMPRESSED_SCHEMA,
     PRICE_RECORDS_SCHEMA,
     PROPERTIES_INFO_SCHEMA,
     PropertyCondition,
@@ -72,7 +73,7 @@ class Address(BaseModel):
     """Dataclass to hold information about a single physical address location."""
 
     unit_number: int | str | None = None
-    street_number: int
+    street_number: int | str
     street_name: str
     suburb: str
     postcode: int
@@ -97,8 +98,8 @@ class Address(BaseModel):
         parsed_address = AbAddressUtility(address.replace("_", " "))
 
         address_object = cls(
-            unit_number=int(parsed_address._flat) if parsed_address._flat else None,
-            street_number=int(parsed_address._number_first),
+            unit_number=parsed_address._flat if parsed_address._flat else None,
+            street_number=parsed_address._number_first,
             street_name=parsed_address._street,
             suburb=parsed_address._locality.replace(" ", "_"),
             postcode=int(parsed_address._post),
@@ -197,7 +198,7 @@ class PriceRecord(BaseModel):
         """Read and validate contents of file containing several records."""
         price_records = pl.read_csv(
             file,
-            schema_overrides=PRICE_RECORDS_SCHEMA,
+            schema_overrides=PRICE_RECORDS_COMPRESSED_SCHEMA,
         )
 
         (
@@ -234,18 +235,7 @@ class PriceRecord(BaseModel):
     @classmethod
     def to_dataframe(cls, price_record_list: list["PriceRecord"], /) -> pl.DataFrame:
         """Convert list of price records to a dataframe."""
-        price_records_frame = (
-            pl.DataFrame(price_record_list)
-            .select(
-                pl.col("address").struct["unit_number"],
-                pl.col("address").struct["street_number"],
-                pl.col("address").struct["street_name"],
-                pl.col("date"),
-                pl.col("record_type"),
-                pl.col("price"),
-            )
-            .cast(PRICE_RECORDS_SCHEMA)
-        )
+        price_records_frame = pl.DataFrame(price_record_list).cast(PRICE_RECORDS_SCHEMA)
 
         return price_records_frame
 
@@ -353,20 +343,8 @@ class PropertyInfo(BaseModel):
         with fsspec.open(properties_info_file, "w") as open_file:
             json.dump(properties_info.rows(named=True), open_file, indent=4, default=str)
 
-    # @classmethod
-    # def to_records(cls, price_record_list: list["PriceRecord"], /) -> pl.DataFrame:
-    #     """Convert list of price records to a dataframe."""
-    #     price_records_frame = (
-    #         pl.DataFrame(price_record_list)
-    #         .select(
-    #             pl.col("address").struct["unit_number"],
-    #             pl.col("address").struct["street_number"],
-    #             pl.col("address").struct["street_name"],
-    #             pl.col("date"),
-    #             pl.col("record_type"),
-    #             pl.col("price"),
-    #         )
-    #         .cast(PRICE_RECORDS_SCHEMA)
-    #     )
-
-    #     return price_records_frame
+    @classmethod
+    def to_dataframe(cls, property_info_list: list["PropertyInfo"], /) -> pl.DataFrame:
+        """Convert list of price records to a dataframe."""
+        property_info_frame = pl.DataFrame(property_info_list).cast(PROPERTIES_INFO_SCHEMA)
+        return property_info_frame

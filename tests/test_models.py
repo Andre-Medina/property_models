@@ -158,7 +158,7 @@ def test_address_parsing_from_dict():
         ),
     ],
 )
-def test_historical_price_init(_name, record_type, address, price, date):
+def test_price_record_init(_name, record_type, address, price, date):
     """Test HistoricalPrice class can be initialized."""
     PriceRecord(
         record_type=RecordType.parse(record_type) if isinstance(record_type, str) else record_type,
@@ -168,9 +168,9 @@ def test_historical_price_init(_name, record_type, address, price, date):
     )
 
 
-def test_historical_price_to_records():
+def test_price_record_to_records():
     """Takes a list of historical prices and converts them to a df."""
-    historical_prices = [
+    price_records = [
         PriceRecord(
             date=date(2020, 1, 1),
             record_type=RecordType.parse(RecordType.AUCTION),
@@ -190,11 +190,17 @@ def test_historical_price_to_records():
             price=200000,
         ),
     ]
-    historical_records = PriceRecord.to_dataframe(historical_prices)
+    historical_records = PriceRecord.to_dataframe(price_records)
     records_json = {
-        "unit_number": [None, None, None],
-        "street_number": [80, 80, 80],
-        "street_name": ["FIFTH STREET", "SAMPLE STREET", "ROSEBERRY STREET"],
+        "address": {
+            "unit_number": [None, None, None],
+            "street_number": [80, 80, 80],
+            "street_name": ["FIFTH STREET", "SAMPLE STREET", "ROSEBERRY STREET"],
+            "suburb": ["ASCOT_VALE", "ASCOT_VALE", "NORTH_MELBOURNE"],
+            "postcode": 3032,
+            "state": "VIC",
+            "country": TEST_COUNTRY,
+        },
         "date": [date(2020, 1, 1), date(2020, 1, 1), date(2020, 1, 1)],
         "record_type": ["auction", "enquiry", "no_sale"],
         "price": [100000, None, 200000],
@@ -205,21 +211,21 @@ def test_historical_price_to_records():
     pl.testing.assert_frame_equal(historical_records, data_json, check_dtypes=False)
 
 
-def test_historical_price_read_csv(mock_price_records):
+def test_price_record_read_csv(mock_price_records):
     """Create csv contents and make sure the read function works."""
     data_csv = PriceRecord._read_csv(mock_price_records)
     data_json = pl.DataFrame(CORRECT_RECORDS_COMPRESSED_JSON)
     pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
 
 
-def test_historical_price_read(mock_price_records):  # noqa: ARG001
+def test_price_record_read(mock_price_records):  # noqa: ARG001
     """Create csv contents and make sure the read function works."""
     data_csv = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
     data_json = pl.DataFrame(CORRECT_RECORDS_JSON)
     pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
 
 
-def test_historical_price_write(mock_price_records):
+def test_price_record_write(mock_price_records):
     """Test writing data writes the correct data."""
     data_csv = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
     os.remove(mock_price_records)
@@ -231,6 +237,18 @@ def test_historical_price_write(mock_price_records):
 
     data_json = pl.DataFrame(CORRECT_RECORDS_JSON)
     pl.testing.assert_frame_equal(data_re_read, data_json, check_dtypes=False)
+
+
+def test_price_records_to_frame(mock_price_records):  # noqa: ARG001
+    """Test converting list of PriceRecord into a frame."""
+    price_record_raw = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+
+    price_record_list: list[PriceRecord] = []
+    for item in price_record_raw.to_dicts():
+        price_record_list.append(PriceRecord(**item))
+    price_record_frame = PriceRecord.to_dataframe(price_record_list)
+
+    pl.testing.assert_frame_equal(price_record_raw, price_record_frame)
 
 
 ####### PROPERTY INFO ############
@@ -350,6 +368,18 @@ def test_properties_info_write(mock_property_info):
     pl.testing.assert_frame_equal(
         properties_info_re_read.sort("floors"), properties_info_correct.sort("floors"), check_dtypes=False
     )
+
+
+def test_property_info_to_frame(mock_property_info):  # noqa: ARG001
+    """Test converting list of PropertyInfo into a frame."""
+    property_info_raw = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+
+    property_info_list: list[PropertyInfo] = []
+    for item in property_info_raw.to_dicts():
+        property_info_list.append(PropertyInfo.from_stringified_dict(item))
+    property_info_frame = PropertyInfo.to_dataframe(property_info_list)
+
+    pl.testing.assert_frame_equal(property_info_raw, property_info_frame)
 
 
 ##### INTEGRATION #############

@@ -87,7 +87,12 @@ def test_parsing_integration():
     """Test generating old listing data and parsing it."""
     raw_listing = RawListing(
         general_info=RawPropertyInfo(
-            address=TEST_ADDRESSES_STRING[0], beds="1", cars="1", baths="1", property_type="Unit/apmt"
+            address=TEST_ADDRESSES_STRING[0],
+            beds="1",
+            cars="1",
+            baths="1",
+            property_type="Unit/apmt",
+            land_size_m2=None,
         ),
         recent_price=RawPriceRecord(date=" March 2019", market_info="$380,000"),
         historical_prices=[

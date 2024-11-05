@@ -22,7 +22,19 @@ ALLOWED_COUNTRIES = Literal["AUS"]
 
 ####### SCHEMAS #######
 
-PRICE_RECORDS_SCHEMA = pl.Schema(
+ADDRESS_SCHEMA = pl.Schema(
+    {
+        "unit_number": pl.UInt16,
+        "street_number": pl.UInt16,
+        "street_name": pl.String,
+        "suburb": pl.String,
+        "postcode": pl.UInt16,
+        "state": pl.String,
+        "country": pl.String,
+    }
+)
+
+PRICE_RECORDS_COMPRESSED_SCHEMA = pl.Schema(
     {
         "unit_number": pl.UInt16,
         "street_number": pl.UInt16,
@@ -33,15 +45,12 @@ PRICE_RECORDS_SCHEMA = pl.Schema(
     }
 )
 
-ADDRESS_SCHEMA = pl.Schema(
+PRICE_RECORDS_SCHEMA = pl.Schema(
     {
-        "unit_number": pl.UInt16,
-        "street_number": pl.UInt16,
-        "street_name": pl.String,
-        "suburb": pl.String,
-        "postcode": pl.UInt16,
-        "state": pl.String,
-        "country": pl.String,
+        "address": pl.Struct(ADDRESS_SCHEMA),
+        "date": pl.Date,
+        "record_type": str,
+        "price": pl.UInt32,
     }
 )
 
@@ -256,6 +265,9 @@ class PropertyType(tuple[str, str]):
         ValueError, If bad value is passed.
         NotImplementedError, If called with un implemented parameters.
         """
+        if property_type is None:
+            return None
+
         with suppress(AttributeError):
             parsed = cls(property_type.value)
             return parsed
@@ -264,8 +276,14 @@ class PropertyType(tuple[str, str]):
         # if ('unit' in property_type_clean) | ("apmt" in property_type):
         if property_type_clean == "unit/apmt":
             return cls.APARTMENT.GENERAL.value
+        if property_type_clean == "townhouse":
+            return cls.APARTMENT.GENERAL.value
+        if property_type_clean == "house":
+            return cls.APARTMENT.GENERAL.value
+        if property_type_clean == "sales_residential":
+            return None
 
-        raise NotImplementedError  # noqa: B904
+        raise NotImplementedError(f"cannot process land type: {property_type_clean!r}")
 
 
 #### Property condition #########
