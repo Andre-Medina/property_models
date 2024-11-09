@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import date
 from functools import lru_cache
 
@@ -83,9 +84,10 @@ class Address(BaseModel):
     @classmethod
     def parse(cls, address, *, country: ALLOWED_COUNTRIES) -> "Address":
         """Takes an address and a country and parses to a common format."""
+        address_cleaned = address.strip()
         match country:
             case "AUS":
-                address_object = cls._parse_australian_address(address)
+                address_object = cls._parse_australian_address(address_cleaned)
 
             case _:
                 raise NotImplementedError(f"Cannot parse address for {country!r}")
@@ -95,7 +97,18 @@ class Address(BaseModel):
     @classmethod
     def _parse_australian_address(cls, address) -> "Address":
         """Parses Australia specific address."""
-        parsed_address = AbAddressUtility(address.replace("_", " "))
+        try:
+            address_ = address
+            address_ = address_.split("&")[-1]  # Split '1.02 & 1.10, 1 LAN ROAD...`  into just `1.10, 1 LAN ROAD...`
+            address_ = address_.replace(".", "")  #  remove `1.02` -> `102`
+            address_ = re.sub(r"^([a-zA-Z\d\.]+),\s*", r"\1/", address_)  #  `unit, number` into `unit/ number`
+            address_ = address_.replace("_", " ")  # Fix "SUBURB_NAME" into "SUBURB NAME"
+            address_ = address.strip()
+            parsed_address = AbAddressUtility(address_)
+        except Exception as exc:
+            exc.add_note(f"Issue with address: {address!r}")
+            exc.add_note(f"Cleaned as: {address_!r}")
+            raise exc
 
         address_object = cls(
             unit_number=parsed_address._flat if parsed_address._flat else None,

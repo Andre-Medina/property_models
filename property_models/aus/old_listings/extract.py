@@ -16,12 +16,14 @@ def get_page_counts(
     old_listing_url: OldListingURL,
 ) -> int:
     """Get total page count."""
+    print("Getting page count...")
     page_url_formatted = old_listing_url.format()
     driver.get(page_url_formatted)
 
     page_navigation = driver.find_element(By.CLASS_NAME, "pagination")
     last_navigation = page_navigation.find_elements(By.TAG_NAME, "li")[-2]
     page_count = int(last_navigation.text)
+    print(f"total pages: {page_count!r}")
 
     return page_count
 

@@ -28,6 +28,7 @@ class OldListing:
         baths: int,
         cars: int,
         max_pages: int | None = None,
+        listings_per_page: int | None = None,
     ) -> tuple[pl.DataFrame, pl.DataFrame]:
         """Extract data from old listings by looping through all related pages."""
         postcode = Postcode.find_postcode(suburb=suburb, country="AUS")
@@ -49,14 +50,25 @@ class OldListing:
 
         for page_number in range(1, page_count + 1):
             if max_pages is not None and page_number > max_pages:
+                print("Enough pages")
                 break
 
             next_page_url = old_listing_url.to_page(page_number)
-            driver.get(next_page_url.format())
+            page_url = next_page_url.format()
 
-            property_infos, price_records = cls.extract_data_from_page(driver, page_url=next_page_url)
+            print(f"Getting data from page: {page_url!r}")
+            print("Loading page...")
+            driver.get(page_url)
+
+            property_infos, price_records = cls.extract_data_from_page(
+                driver,
+                state=next_page_url.state,
+                postcode=next_page_url.postcode,
+                listings_per_page=listings_per_page,
+            )
             price_records_list.append(price_records)
             property_infos_list.append(property_infos)
+            print("Success downloading form page!")
 
         property_infos = pl.concat(property_infos_list)
         price_records = pl.concat(price_records_list)
@@ -64,15 +76,25 @@ class OldListing:
         return property_infos, price_records
 
     @classmethod
-    def extract_data_from_page(cls, driver: WebDriver, *, page_url: OldListingURL) -> tuple[pl.DataFrame, pl.DataFrame]:
+    def extract_data_from_page(
+        cls,
+        driver: WebDriver,
+        *,
+        state: str,
+        postcode: int,
+        listings_per_page: int | None,
+    ) -> tuple[pl.DataFrame, pl.DataFrame]:
         """Extract data from a single page."""
         table = driver.find_elements(By.CLASS_NAME, "content-col")[0]
 
         listings = table.find_elements(By.TAG_NAME, "div")
 
+        if listings_per_page is not None:
+            listings = listings[:listings_per_page]
+
         raw_listings: list[RawListing] = []
         for listing in tqdm(listings, desc="extracting raw listings"):
-            raw_listings.append(extract_listing_data(listing, state=page_url.state, postcode=page_url.postcode))
+            raw_listings.append(extract_listing_data(listing, state=state, postcode=postcode))
 
         property_infos: list[PropertyInfo] = []
         price_records: list[PriceRecord] = []

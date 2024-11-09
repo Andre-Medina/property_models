@@ -24,8 +24,8 @@ ALLOWED_COUNTRIES = Literal["AUS"]
 
 ADDRESS_SCHEMA = pl.Schema(
     {
-        "unit_number": pl.UInt16,
-        "street_number": pl.UInt16,
+        "unit_number": pl.String,
+        "street_number": pl.String,
         "street_name": pl.String,
         "suburb": pl.String,
         "postcode": pl.UInt16,
@@ -36,8 +36,8 @@ ADDRESS_SCHEMA = pl.Schema(
 
 PRICE_RECORDS_COMPRESSED_SCHEMA = pl.Schema(
     {
-        "unit_number": pl.UInt16,
-        "street_number": pl.UInt16,
+        "unit_number": pl.String,
+        "street_number": pl.String,
         "street_name": pl.String,
         "date": pl.Date,
         "record_type": str,
@@ -280,7 +280,7 @@ class PropertyType(tuple[str, str]):
             return cls.APARTMENT.GENERAL.value
         if property_type_clean == "house":
             return cls.APARTMENT.GENERAL.value
-        if property_type_clean == "sales_residential":
+        if property_type_clean in ["sales_residential", "residential_sale"]:
             return None
 
         raise NotImplementedError(f"cannot process land type: {property_type_clean!r}")
