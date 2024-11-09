@@ -99,11 +99,11 @@ class Address(BaseModel):
         """Parses Australia specific address."""
         try:
             address_ = address
-            address_ = address_.split("&")[-1]  # Split '1.02 & 1.10, 1 LAN ROAD...`  into just `1.10, 1 LAN ROAD...`
+            address_ = address_.split("&")[-1].strip()  # Split '1.02 & 1.10, 1 road...`  into just `1.10, 1 road...`
             address_ = address_.replace(".", "")  #  remove `1.02` -> `102`
             address_ = re.sub(r"^([a-zA-Z\d\.]+),\s*", r"\1/", address_)  #  `unit, number` into `unit/ number`
             address_ = address_.replace("_", " ")  # Fix "SUBURB_NAME" into "SUBURB NAME"
-            address_ = address.strip()
+            address_ = address_.strip()
             parsed_address = AbAddressUtility(address_)
         except Exception as exc:
             exc.add_note(f"Issue with address: {address!r}")
