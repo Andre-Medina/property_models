@@ -114,7 +114,7 @@ class Address(BaseModel):
 
         address_object = cls(
             unit_number=parsed_address._flat if parsed_address._flat else None,
-            street_number=parsed_address._number_first,
+            street_number=parsed_address._number_first,  # _number_last is for address like `10-20 smith street`
             street_name=parsed_address._street,
             suburb=parsed_address._locality.replace(" ", "_"),
             postcode=int(parsed_address._post),

@@ -104,17 +104,17 @@ def test_find_postcode(mock_postcodes):
             TEST_ADDRESSES[0],
         ),
         (
-            "Basic AUS U prefix, ",
+            "AUS U prefix, ",
             f"U{UNIT_NUMS[0]} {STREET_NUMS[0]}-44 {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
             TEST_ADDRESSES[0],
         ),
-        # (
-        #     "Basic AUS G2 unit, ",
-        #     f"G2 {STREET_NUMS[0]}-44 {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
-        #     TEST_COUNTRY,
-        #     TEST_ADDRESSES[0] | {"unit_number": "G2"},
-        # ),
+        (
+            "AUS G2 unit, ",
+            f"G2/{STREET_NUMS[0]}-44 {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0] | {"unit_number": "G2"},
+        ),
         # (
         #     "AUS space between unit and number, ",
         #     f"{UNIT_NUMS[0]} {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
