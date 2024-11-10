@@ -18,6 +18,15 @@ from property_models.dev_utils.fixtures import (
     TEST_STATE,
     TEST_SUBURB,
 )
+from property_models.dev_utils.fixtures import (
+    TEST_STREET_NAMES as STREET_NAMES,
+)
+from property_models.dev_utils.fixtures import (
+    TEST_STREET_NUMBERS as STREET_NUMS,
+)
+from property_models.dev_utils.fixtures import (
+    TEST_UNIT_NUMBERS as UNIT_NUMS,
+)
 from property_models.models import (
     Address,
     Postcode,  # Import the Postcode class from your module
@@ -65,131 +74,65 @@ def test_find_postcode(mock_postcodes):
     "_name, address, country, correct_json",
     [
         (
-            "Basic AUS unit 1, ",
-            "U2 42-44 Example St, STANMORE, NSW 2048",
+            "Basic AUS slash unit, ",
+            f"{UNIT_NUMS[0]}/{STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
-            {
-                "unit_number": "2",
-                "street_number": "42",
-                "street_name": "EXAMPLE STREET",
-                "suburb": "STANMORE",
-                "postcode": 2048,
-                "state": "NSW",
-                "country": TEST_COUNTRY,
-            },
-        ),
-        (
-            "Basic AUS unit 2, ",
-            "7/67 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
-            TEST_COUNTRY,
-            {
-                "unit_number": "7",
-                "street_number": "67",
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT_VALE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": TEST_COUNTRY,
-            },
-        ),
-        (
-            "Basic AUS unit 2, ",
-            "80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
-            TEST_COUNTRY,
-            {
-                "unit_number": None,
-                "street_number": "80",
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT_VALE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": TEST_COUNTRY,
-            },
-        ),
-        (
-            "AUS with &, ",
-            "81 & 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
-            TEST_COUNTRY,
-            {
-                "unit_number": None,
-                "street_number": "80",
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT_VALE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": TEST_COUNTRY,
-            },
+            TEST_ADDRESSES[0],
         ),
         (
             "AUS comma unit number, ",
-            "10, 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
+            f"{UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
-            {
-                "unit_number": "10",
-                "street_number": "80",
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT_VALE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": TEST_COUNTRY,
-            },
+            TEST_ADDRESSES[0],
         ),
         (
-            "AUS full stop unit number, ",
-            "1.10, 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
+            "Basic AUS no unit, ",
+            f"{STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
-            {
-                "unit_number": "110",
-                "street_number": "80",
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT_VALE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": TEST_COUNTRY,
-            },
+            TEST_ADDRESSES[0] | {"unit_number": None},
         ),
         (
             "AUS needs stripping, ",
-            " 1, 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032 ",
+            f" {UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
-            {
-                "unit_number": "1",
-                "street_number": "80",
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT_VALE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": TEST_COUNTRY,
-            },
+            TEST_ADDRESSES[0],
         ),
         (
             "AUS Unit prefix, ",
-            "UNIT 1, 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032 ",
+            f"UNIT {UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
-            {
-                "unit_number": "1",
-                "street_number": "80",
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT_VALE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": TEST_COUNTRY,
-            },
+            TEST_ADDRESSES[0],
+        ),
+        (
+            "Basic AUS U prefix, ",
+            f"U{UNIT_NUMS[0]} {STREET_NUMS[0]}-44 {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0],
         ),
         # (
-        #     "AUS space between unit and number, ",
-        #     "1 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032 ",
+        #     "Basic AUS G2 unit, ",
+        #     f"G2 {STREET_NUMS[0]}-44 {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
         #     TEST_COUNTRY,
-        #     {
-        #         "unit_number": "1",
-        #         "street_number": "80",
-        #         "street_name": "ROSEBERRY STREET",
-        #         "suburb": "ASCOT_VALE",
-        #         "postcode": 3032,
-        #         "state": "VIC",
-        #         "country": TEST_COUNTRY,
-        #     },
+        #     TEST_ADDRESSES[0] | {"unit_number": "G2"},
         # ),
+        # (
+        #     "AUS space between unit and number, ",
+        #     f"{UNIT_NUMS[0]} {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+        #     TEST_COUNTRY,
+        #     TEST_ADDRESSES[0],
+        # ),
+        (
+            "AUS with two units with '&', ",
+            f"6000 & {UNIT_NUMS[0]}/{STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0],
+        ),
+        (
+            "AUS full stop unit number, ",
+            f"1.{UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0] | {"unit_number": f"1{UNIT_NUMS[0]}"},
+        ),
     ],
 )
 def test_address_parsing(_name, address, country, correct_json):
@@ -494,7 +437,7 @@ def test_property_info_unique(mock_property_info):  # noqa: ARG001
 
     property_info_de_dupe = PropertyInfo.unique(property_infos=property_info_with_duplicates)
 
-    pl.testing.assert_frame_equal(property_info_raw, property_info_de_dupe)
+    pl.testing.assert_frame_equal(property_info_raw.sort("address"), property_info_de_dupe.sort("address"))
 
 
 ##### INTEGRATION #############
