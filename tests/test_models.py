@@ -115,12 +115,18 @@ def test_find_postcode(mock_postcodes):
             TEST_COUNTRY,
             TEST_ADDRESSES[0] | {"unit_number": "G2"},
         ),
-        # (
-        #     "AUS space between unit and number, ",
-        #     f"{UNIT_NUMS[0]} {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
-        #     TEST_COUNTRY,
-        #     TEST_ADDRESSES[0],
-        # ),
+        (
+            "AUS G2 unit with space, ",
+            f"G2 {STREET_NUMS[0]}-44 {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0] | {"unit_number": "G2"},
+        ),
+        (
+            "AUS space between unit and number, ",
+            f"{UNIT_NUMS[0]} {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0],
+        ),
         (
             "AUS with two units with '&', ",
             f"6000 & {UNIT_NUMS[0]}/{STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
@@ -132,6 +138,12 @@ def test_find_postcode(mock_postcodes):
             f"1.{UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
             TEST_ADDRESSES[0] | {"unit_number": f"1{UNIT_NUMS[0]}"},
+        ),
+        (
+            "AUS full stop/ space & letter, ",
+            f"S1.{UNIT_NUMS[0]} {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0] | {"unit_number": f"S1{UNIT_NUMS[0]}"},
         ),
     ],
 )

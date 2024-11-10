@@ -101,11 +101,10 @@ class Address(BaseModel):
         try:
             address_ = address
             address_ = re.sub(r"\bUNIT\s+(\d+)", r"\1", address_)
-            # address_ = re.sub(r"^([a-zA-Z\d\.]+)\s\d", r"\1/", address_) # `Unit number` into `unit/ number`
             address_ = address_.split("&")[-1].strip()  # Split '1.02 & 1.10, 1 road...`  into just `1.10, 1 road...`
             address_ = address_.replace(".", "")  #  remove `1.02` -> `102`
-            # address_ = re.sub(r"^([a-zA-Z\d\.]+)[,|\s]\s*", r"\1/", address_)  #  `unit, number` into `unit/ number`
-            address_ = re.sub(r"^([a-zA-Z\d\.]+),\s*", r"\1/", address_)  #  `unit, number` into `unit/ number`
+            address_ = re.sub(r"^([A-TV-Za-tv-z0-9]+)\s(\d)", r"\1/\2", address_)  # `Unit number` into `unit/number`
+            address_ = re.sub(r"^([a-zA-Z\d\.]+),\s*", r"\1/", address_)  #  `unit, number` into `unit/number`
             address_ = address_.replace("_", " ")  # Fix "SUBURB_NAME" into "SUBURB NAME"
             address_ = address_.strip()
             parsed_address = AbAddressUtility(address_)
