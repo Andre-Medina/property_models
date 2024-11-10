@@ -21,6 +21,7 @@ from property_models.constants import (
     PropertyType,
     RecordType,
 )
+from property_models.exceptions import BadAddressError
 
 
 ####### POSTCODES #####################
@@ -99,16 +100,17 @@ class Address(BaseModel):
         """Parses Australia specific address."""
         try:
             address_ = address
+            address_ = re.sub(r"\bUNIT\s+(\d+)", r"\1", address_)
+            # address_ = re.sub(r"^([a-zA-Z\d\.]+)\s\d", r"\1/", address_) # `Unit number` into `unit/ number`
             address_ = address_.split("&")[-1].strip()  # Split '1.02 & 1.10, 1 road...`  into just `1.10, 1 road...`
             address_ = address_.replace(".", "")  #  remove `1.02` -> `102`
+            # address_ = re.sub(r"^([a-zA-Z\d\.]+)[,|\s]\s*", r"\1/", address_)  #  `unit, number` into `unit/ number`
             address_ = re.sub(r"^([a-zA-Z\d\.]+),\s*", r"\1/", address_)  #  `unit, number` into `unit/ number`
             address_ = address_.replace("_", " ")  # Fix "SUBURB_NAME" into "SUBURB NAME"
             address_ = address_.strip()
             parsed_address = AbAddressUtility(address_)
         except Exception as exc:
-            exc.add_note(f"Issue with address: {address!r}")
-            exc.add_note(f"Cleaned as: {address_!r}")
-            raise exc
+            raise BadAddressError(f"Issue with address: {address!r}\nCleaned as: {address_!r}") from exc
 
         address_object = cls(
             unit_number=parsed_address._flat if parsed_address._flat else None,
@@ -361,3 +363,32 @@ class PropertyInfo(BaseModel):
         """Convert list of price records to a dataframe."""
         property_info_frame = pl.DataFrame(property_info_list).cast(PROPERTIES_INFO_SCHEMA)
         return property_info_frame
+
+    def unique(property_infos: pl.DataFrame) -> pl.DataFrame:
+        """Remove duplicated addresses, combining information."""
+        duplicated_addresses = property_infos.filter(pl.col("address").is_duplicated())
+        if len(duplicated_addresses["address"].unique()) == 0:
+            return property_infos
+
+        property_info_unique = duplicated_addresses.group_by("address").agg(
+            pl.col("beds").max(),
+            pl.col("baths").max(),
+            pl.col("cars").max(),
+            pl.col("property_size_m2").max(),
+            pl.col("land_size_m2").max(),
+            pl.col("condition").max(),
+            pl.col("property_type").map_elements(
+                PropertyType.unique, return_dtype=PROPERTIES_INFO_SCHEMA["property_type"]
+            ),
+            pl.col("construction_date").max(),
+            pl.col("floors").max(),
+        )
+
+        property_info_all = pl.concat(
+            [
+                property_info_unique,
+                property_infos.filter(~pl.col("address").is_duplicated()),
+            ]
+        ).sort("address")
+
+        return property_info_all

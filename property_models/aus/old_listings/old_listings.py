@@ -1,3 +1,5 @@
+import traceback
+
 import polars as pl
 import selenium.webdriver
 from selenium.webdriver.common.by import By
@@ -6,6 +8,7 @@ from tqdm import tqdm
 
 from property_models.aus.old_listings.constants import OldListingURL, RawListing
 from property_models.aus.old_listings.extract import extract_listing_data, get_page_counts
+from property_models.constants import ERRORS
 from property_models.models import Postcode, PriceRecord, PropertyInfo
 
 
@@ -29,6 +32,7 @@ class OldListing:
         cars: int,
         max_pages: int | None = None,
         listings_per_page: int | None = None,
+        errors: ERRORS = "skip",
     ) -> tuple[pl.DataFrame, pl.DataFrame]:
         """Extract data from old listings by looping through all related pages."""
         postcode = Postcode.find_postcode(suburb=suburb, country="AUS")
@@ -65,6 +69,7 @@ class OldListing:
                 state=next_page_url.state,
                 postcode=next_page_url.postcode,
                 listings_per_page=listings_per_page,
+                errors=errors,
             )
             price_records_list.append(price_records)
             property_infos_list.append(property_infos)
@@ -83,6 +88,7 @@ class OldListing:
         state: str,
         postcode: int,
         listings_per_page: int | None,
+        errors: ERRORS,
     ) -> tuple[pl.DataFrame, pl.DataFrame]:
         """Extract data from a single page."""
         table = driver.find_elements(By.CLASS_NAME, "content-col")[0]
@@ -94,16 +100,31 @@ class OldListing:
 
         raw_listings: list[RawListing] = []
         for listing in tqdm(listings, desc="extracting raw listings"):
-            raw_listings.append(extract_listing_data(listing, state=state, postcode=postcode))
+            raw_listings.append(extract_listing_data(listing, state=state, postcode=postcode, errors=errors))
 
         property_infos: list[PropertyInfo] = []
         price_records: list[PriceRecord] = []
         for raw_listing in tqdm(raw_listings, desc="converting to data"):
-            property_info = raw_listing.to_property_info()
-            property_infos.append(property_info)
+            try:
+                property_info = raw_listing.to_property_info()
+                property_infos.append(property_info)
+            except Exception as exc:
+                if errors == "raise":
+                    raise exc
+                if errors == "skip":
+                    traceback.print_exc()
+                    continue
 
-            price_record = raw_listing.to_price_records()
-            price_records.extend(price_record)
+            try:
+                price_record = raw_listing.to_price_records()
+                price_records.extend(price_record)
+            except Exception as exc:
+                if errors == "raise":
+                    raise exc
+                if errors == "skip":
+                    traceback.print_exc()
+                    property_infos.pop()  # Remove just added property info
+                    continue
 
         print("Converting to frames.")
         property_info_df = PropertyInfo.to_dataframe(property_infos)

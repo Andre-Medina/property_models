@@ -20,6 +20,8 @@ PROPERTIES_INFO_JSON_FILE: str = DATA_DIR + "/processed/{country}/{state}/{subur
 
 ALLOWED_COUNTRIES = Literal["AUS"]
 
+ERRORS = Literal["raise", "skip"]
+
 ####### SCHEMAS #######
 
 ADDRESS_SCHEMA = pl.Schema(
@@ -284,6 +286,18 @@ class PropertyType(tuple[str, str]):
             return None
 
         raise NotImplementedError(f"cannot process land type: {property_type_clean!r}")
+
+    @classmethod
+    def unique(cls, property_types_: list["PropertyType"], /) -> "PropertyType":
+        """Take a list of potential property types and finds the unique type."""
+        property_types = [cls(property_type) for property_type in property_types_ if property_type is not None]
+
+        if len((unique_property_type := set(property_types)) - {None}) == 1:
+            return list(unique_property_type)[0]
+        if len(unique_property_type) <= 1:
+            return None
+
+        raise NotImplementedError(f"Cannot determine the unique type from '{property_types_}'")
 
 
 #### Property condition #########

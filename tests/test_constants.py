@@ -109,3 +109,18 @@ def test_property_type_pydantic():
     TestModel(property_type=PropertyType(("land", "new_build")))
     with pytest.raises(ValidationError):
         TestModel(property_type=("land", "new_build"))
+
+
+def test_property_type_unique():
+    """Test `PropertyType.unique` works as expected."""
+    assert (
+        PropertyType.unique([PropertyType.APARTMENT.SIXTIES_BRICK.value, PropertyType.APARTMENT.SIXTIES_BRICK.value])
+        == PropertyType.APARTMENT.SIXTIES_BRICK.value
+    )
+
+    assert (
+        PropertyType.unique([PropertyType.APARTMENT.SIXTIES_BRICK.value, None])
+        == PropertyType.APARTMENT.SIXTIES_BRICK.value
+    )
+
+    assert PropertyType.unique([None, None]) is None

@@ -6,7 +6,7 @@ import polars as pl
 import polars.testing
 import pytest
 
-from property_models.constants import PropertyCondition, PropertyType, RecordType
+from property_models.constants import PROPERTIES_INFO_SCHEMA, PropertyCondition, PropertyType, RecordType
 from property_models.dev_utils.fixtures import (
     CORRECT_PROPERTY_INFO_JSON,
     CORRECT_RECORDS_COMPRESSED_JSON,
@@ -107,7 +107,7 @@ def test_find_postcode(mock_postcodes):
             },
         ),
         (
-            "AUS with &",
+            "AUS with &, ",
             "81 & 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
             TEST_COUNTRY,
             {
@@ -121,7 +121,7 @@ def test_find_postcode(mock_postcodes):
             },
         ),
         (
-            "AUS comma unit number",
+            "AUS comma unit number, ",
             "10, 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
             TEST_COUNTRY,
             {
@@ -135,7 +135,7 @@ def test_find_postcode(mock_postcodes):
             },
         ),
         (
-            "AUS full stop unit number",
+            "AUS full stop unit number, ",
             "1.10, 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
             TEST_COUNTRY,
             {
@@ -149,7 +149,7 @@ def test_find_postcode(mock_postcodes):
             },
         ),
         (
-            "AUS needs stripping",
+            "AUS needs stripping, ",
             " 1, 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032 ",
             TEST_COUNTRY,
             {
@@ -162,6 +162,34 @@ def test_find_postcode(mock_postcodes):
                 "country": TEST_COUNTRY,
             },
         ),
+        (
+            "AUS Unit prefix, ",
+            "UNIT 1, 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032 ",
+            TEST_COUNTRY,
+            {
+                "unit_number": "1",
+                "street_number": "80",
+                "street_name": "ROSEBERRY STREET",
+                "suburb": "ASCOT_VALE",
+                "postcode": 3032,
+                "state": "VIC",
+                "country": TEST_COUNTRY,
+            },
+        ),
+        # (
+        #     "AUS space between unit and number, ",
+        #     "1 80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032 ",
+        #     TEST_COUNTRY,
+        #     {
+        #         "unit_number": "1",
+        #         "street_number": "80",
+        #         "street_name": "ROSEBERRY STREET",
+        #         "suburb": "ASCOT_VALE",
+        #         "postcode": 3032,
+        #         "state": "VIC",
+        #         "country": TEST_COUNTRY,
+        #     },
+        # ),
     ],
 )
 def test_address_parsing(_name, address, country, correct_json):
@@ -436,6 +464,37 @@ def test_property_info_to_frame(mock_property_info):  # noqa: ARG001
     property_info_frame = PropertyInfo.to_dataframe(property_info_list)
 
     pl.testing.assert_frame_equal(property_info_raw, property_info_frame)
+
+
+def test_property_info_unique(mock_property_info):  # noqa: ARG001
+    """Test taking unique property_info works."""
+    property_info_raw = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    duped_address_1 = property_info_raw["address"].item(0)
+    duped_address_2 = property_info_raw["address"].item(1)
+
+    first_half_of_duplicated = property_info_raw.filter(pl.col("address") == duped_address_1).with_columns(
+        pl.lit(None).alias("beds").cast(PROPERTIES_INFO_SCHEMA["beds"]),
+        pl.lit(None).alias("construction_date").cast(PROPERTIES_INFO_SCHEMA["construction_date"]),
+        pl.lit(None).alias("floors").cast(PROPERTIES_INFO_SCHEMA["floors"]),
+    )
+    second_half_of_duplicated = property_info_raw.filter(pl.col("address") == duped_address_1).with_columns(
+        pl.lit(None).alias("cars").cast(PROPERTIES_INFO_SCHEMA["cars"]),
+        pl.lit(None).alias("property_type").cast(PROPERTIES_INFO_SCHEMA["property_type"]),
+        pl.lit(None).alias("condition").cast(PROPERTIES_INFO_SCHEMA["condition"]),
+    )
+
+    property_info_with_duplicates = pl.concat(
+        [
+            first_half_of_duplicated,
+            second_half_of_duplicated,
+            property_info_raw.filter(pl.col("address") != duped_address_1),
+            property_info_raw.filter(pl.col("address") == duped_address_2),
+        ]
+    )
+
+    property_info_de_dupe = PropertyInfo.unique(property_infos=property_info_with_duplicates)
+
+    pl.testing.assert_frame_equal(property_info_raw, property_info_de_dupe)
 
 
 ##### INTEGRATION #############
