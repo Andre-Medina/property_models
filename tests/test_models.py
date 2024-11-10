@@ -139,6 +139,12 @@ def test_find_postcode(mock_postcodes):
             TEST_COUNTRY,
             TEST_ADDRESSES[0],
         ),
+        # (  # FIXME: Unsure how to filter out 'AND' unless numbers either side. But then "12A AND 12B". How to split?
+        #     "AUS with two units with 'AND', ",
+        #     f"600 AND {UNIT_NUMS[0]}/{STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+        #     TEST_COUNTRY,
+        #     TEST_ADDRESSES[0],
+        # ),
         (
             "AUS full stop unit number, ",
             f"1.{UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
