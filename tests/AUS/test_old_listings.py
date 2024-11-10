@@ -8,7 +8,7 @@ from property_models.aus.old_listings.constants import (
     RawPriceRecord,
     RawPropertyInfo,
 )
-from property_models.aus.old_listings.parse import parse_date, parse_price, parse_record_type
+from property_models.aus.old_listings.parse import parse_date, parse_land, parse_price, parse_record_type
 from property_models.constants import PropertyType, RecordType
 from property_models.dev_utils.fixtures import (
     TEST_ADDRESSES,
@@ -18,6 +18,20 @@ from property_models.dev_utils.fixtures import (
     TEST_SUBURB,
 )
 from property_models.models import Address, PriceRecord, PropertyInfo
+
+
+def test_land_parse():
+    """Test pasting land sizes."""
+    assert parse_land(None) is None
+    assert parse_land("1920 Square Metres") == 1920
+    assert parse_land("500") == 500
+    assert parse_land("47.5") == 47.5
+    assert parse_land("89.00") == 89.00
+    assert parse_land("107 m2") == 107
+    assert parse_land("500 sqm") == 500
+    assert parse_land("96.5 sqm") == 96.5
+    assert parse_land("176m2 approx.") == 176
+    assert parse_land("343 m2 (approx)") == 343
 
 
 def test_parse_date():
@@ -89,8 +103,8 @@ def test_parsing_integration():
         general_info=RawPropertyInfo(
             address=TEST_ADDRESSES_STRING[0],
             beds="1",
-            cars="1",
-            baths="1",
+            baths="2",
+            cars="3",
             property_type="Unit/apmt",
             land_size_m2=None,
         ),
@@ -108,9 +122,9 @@ def test_parsing_integration():
 
     correct_property_info = PropertyInfo(
         address=correct_address,
-        baths=1,
         beds=1,
-        cars=1,
+        baths=2,
+        cars=3,
         property_size_m2=None,
         land_size_m2=None,
         condition=None,

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, model_validator
 from typing_extensions import Self
 
-from property_models.aus.old_listings.parse import parse_date, parse_price, parse_record_type
+from property_models.aus.old_listings.parse import parse_date, parse_land, parse_price, parse_record_type
 from property_models.constants import PropertyType
 from property_models.models import (
     Address,
@@ -91,17 +91,13 @@ class RawListing(BaseModel):
 
     def to_property_info(self) -> PropertyInfo:
         """Extract the property info from the listing."""
-        # FIXME:
-        if self.general_info.land_size_m2 is not None:
-            print(f"Cannot process land: {self.general_info.land_size_m2!r}")
-
         property_info = PropertyInfo(
             address=Address.parse(self.general_info.address, country="AUS"),
             beds=int(self.general_info.beds),
             baths=int(self.general_info.baths),
             cars=int(self.general_info.cars),
             property_size_m2=None,
-            land_size_m2=None,
+            land_size_m2=parse_land(self.general_info.land_size_m2),
             condition=None,
             property_type=PropertyType.parse(self.general_info.property_type, errors="raise"),
             construction_date=None,

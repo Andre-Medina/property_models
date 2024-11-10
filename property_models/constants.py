@@ -3,7 +3,7 @@ from abc import abstractmethod
 from contextlib import suppress
 from enum import Enum
 from functools import lru_cache
-from typing import Literal
+from typing import Any, Literal
 
 import polars as pl
 
@@ -249,7 +249,7 @@ class PropertyType(tuple[str, str]):
         return sub_enum_lookup
 
     @classmethod
-    def parse(cls, property_type: str, *, errors: Literal["raise", "coerce", "null"] = "raise") -> "PropertyType":  # noqa: ARG003
+    def parse(cls, property_type: Any, *, errors: Literal["raise", "coerce", "null"] = "raise") -> "PropertyType":  # noqa: ARG003, PLR0911
         """Takes a string and converts it into an enum.
 
         Parameters
@@ -270,18 +270,24 @@ class PropertyType(tuple[str, str]):
         if property_type is None:
             return None
 
+        with suppress(Exception):
+            parsed = cls(property_type)
+            return parsed
+
         with suppress(AttributeError):
             parsed = cls(property_type.value)
             return parsed
         property_type_clean = property_type.lower().strip().replace(" ", "_")
 
         # if ('unit' in property_type_clean) | ("apmt" in property_type):
-        if property_type_clean == "unit/apmt":
+        if property_type_clean in ["unit/apmt", "apartment"]:
             return cls.APARTMENT.GENERAL.value
         if property_type_clean == "townhouse":
-            return cls.APARTMENT.GENERAL.value
+            return cls.TOWN_HOUSE.GENERAL.value
         if property_type_clean == "house":
-            return cls.APARTMENT.GENERAL.value
+            return cls.FREE_STANDING_HOUSE.GENERAL.value
+        if property_type_clean == "land":
+            return cls.LAND.GENERAL.value
         if property_type_clean in ["sales_residential", "residential_sale"]:
             return None
 

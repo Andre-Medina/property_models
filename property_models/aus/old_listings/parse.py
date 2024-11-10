@@ -3,6 +3,37 @@ import re
 
 from property_models.constants import RecordType
 
+##### PARSE LAND ############
+
+
+def parse_land(land_size_str: str | None, /) -> float:
+    """Parse a land size string and return the numeric value in square meters.
+
+    E.g.
+    ```
+    '1920 Square Metres' -> 1920
+    '500' -> 500
+    '47.5' -> 47.5
+    '89.00' -> 89.00
+    '107 m2' -> 107
+    '500 sqm' -> 500
+    '96.5 sqm' -> 96.5
+    "176m2 approx." -> 176
+    '343 m2 (approx)' -> 343
+    ```
+    """
+    if land_size_str is None:
+        return None
+
+    match = re.search(r"(\d+(\.\d+)?)", land_size_str)
+
+    if match:
+        land_size = float(match.group(1))
+        return land_size
+
+    raise ValueError(f"Cannot parse land size: {land_size_str!r}")
+
+
 ###### PARSE PRICES AND RECORD TYPES ##########
 
 
