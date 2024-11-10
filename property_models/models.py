@@ -1,4 +1,5 @@
 import json
+import re
 from datetime import date
 from functools import lru_cache
 
@@ -13,12 +14,14 @@ from property_models.constants import (
     ADDRESS_SCHEMA,
     ALLOWED_COUNTRIES,
     POSTCODE_SCHEMA,
+    PRICE_RECORDS_COMPRESSED_SCHEMA,
     PRICE_RECORDS_SCHEMA,
     PROPERTIES_INFO_SCHEMA,
     PropertyCondition,
     PropertyType,
     RecordType,
 )
+from property_models.exceptions import BadAddressError
 
 
 ####### POSTCODES #####################
@@ -72,7 +75,7 @@ class Address(BaseModel):
     """Dataclass to hold information about a single physical address location."""
 
     unit_number: int | str | None = None
-    street_number: int
+    street_number: int | str
     street_name: str
     suburb: str
     postcode: int
@@ -82,9 +85,10 @@ class Address(BaseModel):
     @classmethod
     def parse(cls, address, *, country: ALLOWED_COUNTRIES) -> "Address":
         """Takes an address and a country and parses to a common format."""
+        address_cleaned = address.strip()
         match country:
             case "AUS":
-                address_object = cls._parse_australian_address(address)
+                address_object = cls._parse_australian_address(address_cleaned)
 
             case _:
                 raise NotImplementedError(f"Cannot parse address for {country!r}")
@@ -94,13 +98,25 @@ class Address(BaseModel):
     @classmethod
     def _parse_australian_address(cls, address) -> "Address":
         """Parses Australia specific address."""
-        parsed_address = AbAddressUtility(address)
+        try:
+            address_ = address
+            address_ = re.sub(r"\bUNIT\s+(\d+)", r"\1", address_)
+            address_ = re.sub(r"\bLOT\s+(\d+)", r"\1", address_)
+            address_ = address_.split("&")[-1].strip()  # Split '1.02 & 1.10, 1 road...`  into just `1.10, 1 road...`
+            address_ = address_.replace(".", "")  #  remove `1.02` -> `102`
+            address_ = re.sub(r"^([A-TV-Za-tv-z0-9]+)\s(\d)", r"\1/\2", address_)  # `Unit number` into `unit/number`
+            address_ = re.sub(r"^([a-zA-Z\d\.]+),\s*", r"\1/", address_)  #  `unit, number` into `unit/number`
+            address_ = address_.replace("_", " ")  # Fix "SUBURB_NAME" into "SUBURB NAME"
+            address_ = address_.strip()
+            parsed_address = AbAddressUtility(address_)
+        except Exception as exc:
+            raise BadAddressError(f"Issue with address: {address!r}\nCleaned as: {address_!r}") from exc
 
         address_object = cls(
-            unit_number=int(parsed_address._flat) if parsed_address._flat else None,
-            street_number=int(parsed_address._number_first),
+            unit_number=parsed_address._flat if parsed_address._flat else None,
+            street_number=parsed_address._number_first,  # _number_last is for address like `10-20 smith street`
             street_name=parsed_address._street,
-            suburb=parsed_address._locality,
+            suburb=parsed_address._locality.replace(" ", "_"),
             postcode=int(parsed_address._post),
             state=parsed_address._state,
             country="AUS",
@@ -160,7 +176,7 @@ class PriceRecord(BaseModel):
 
     address: Address
     date: date
-    record_type: RecordType
+    record_type: RecordType | None
     price: int | None
 
     @classmethod
@@ -197,7 +213,7 @@ class PriceRecord(BaseModel):
         """Read and validate contents of file containing several records."""
         price_records = pl.read_csv(
             file,
-            schema_overrides=PRICE_RECORDS_SCHEMA,
+            schema_overrides=PRICE_RECORDS_COMPRESSED_SCHEMA,
         )
 
         (
@@ -232,20 +248,9 @@ class PriceRecord(BaseModel):
             price_records_compressed.write_csv(open_file)
 
     @classmethod
-    def to_records(cls, price_record_list: list["PriceRecord"], /) -> pl.DataFrame:
+    def to_dataframe(cls, price_record_list: list["PriceRecord"], /) -> pl.DataFrame:
         """Convert list of price records to a dataframe."""
-        price_records_frame = (
-            pl.DataFrame(price_record_list)
-            .select(
-                pl.col("address").struct["unit_number"],
-                pl.col("address").struct["street_number"],
-                pl.col("address").struct["street_name"],
-                pl.col("date"),
-                pl.col("record_type"),
-                pl.col("price"),
-            )
-            .cast(PRICE_RECORDS_SCHEMA)
-        )
+        price_records_frame = pl.DataFrame(price_record_list).cast(PRICE_RECORDS_SCHEMA)
 
         return price_records_frame
 
@@ -352,3 +357,38 @@ class PropertyInfo(BaseModel):
 
         with fsspec.open(properties_info_file, "w") as open_file:
             json.dump(properties_info.rows(named=True), open_file, indent=4, default=str)
+
+    @classmethod
+    def to_dataframe(cls, property_info_list: list["PropertyInfo"], /) -> pl.DataFrame:
+        """Convert list of price records to a dataframe."""
+        property_info_frame = pl.DataFrame(property_info_list).cast(PROPERTIES_INFO_SCHEMA)
+        return property_info_frame
+
+    def unique(property_infos: pl.DataFrame) -> pl.DataFrame:
+        """Remove duplicated addresses, combining information."""
+        duplicated_addresses = property_infos.filter(pl.col("address").is_duplicated())
+        if len(duplicated_addresses["address"].unique()) == 0:
+            return property_infos
+
+        property_info_unique = duplicated_addresses.group_by("address").agg(
+            pl.col("beds").max(),
+            pl.col("baths").max(),
+            pl.col("cars").max(),
+            pl.col("property_size_m2").max(),
+            pl.col("land_size_m2").max(),
+            pl.col("condition").max(),
+            pl.col("property_type").map_elements(
+                PropertyType.unique, return_dtype=PROPERTIES_INFO_SCHEMA["property_type"]
+            ),
+            pl.col("construction_date").max(),
+            pl.col("floors").max(),
+        )
+
+        property_info_all = pl.concat(
+            [
+                property_info_unique,
+                property_infos.filter(~pl.col("address").is_duplicated()),
+            ]
+        ).sort("address")
+
+        return property_info_all

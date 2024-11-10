@@ -6,15 +6,26 @@ import polars as pl
 import polars.testing
 import pytest
 
-from property_models.constants import PropertyCondition, PropertyType, RecordType
+from property_models.constants import PROPERTIES_INFO_SCHEMA, PropertyCondition, PropertyType, RecordType
 from property_models.dev_utils.fixtures import (
     CORRECT_PROPERTY_INFO_JSON,
     CORRECT_RECORDS_COMPRESSED_JSON,
     CORRECT_RECORDS_JSON,
+    TEST_ADDRESSES,
+    TEST_ADDRESSES_STRING,
     TEST_COUNTRY,
     TEST_POSTCODE,
     TEST_STATE,
     TEST_SUBURB,
+)
+from property_models.dev_utils.fixtures import (
+    TEST_STREET_NAMES as STREET_NAMES,
+)
+from property_models.dev_utils.fixtures import (
+    TEST_STREET_NUMBERS as STREET_NUMS,
+)
+from property_models.dev_utils.fixtures import (
+    TEST_UNIT_NUMBERS as UNIT_NUMS,
 )
 from property_models.models import (
     Address,
@@ -63,46 +74,88 @@ def test_find_postcode(mock_postcodes):
     "_name, address, country, correct_json",
     [
         (
-            "Basic AUS unit 1, ",
-            "U2 42-44 Example St, STANMORE, NSW 2048",
+            "Basic AUS slash unit, ",
+            f"{UNIT_NUMS[0]}/{STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
-            {
-                "unit_number": 2,
-                "street_number": 42,
-                "street_name": "EXAMPLE STREET",
-                "suburb": "STANMORE",
-                "postcode": 2048,
-                "state": "NSW",
-                "country": TEST_COUNTRY,
-            },
+            TEST_ADDRESSES[0],
         ),
         (
-            "Basic AUS unit 2, ",
-            "7/67 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
+            "AUS comma unit number, ",
+            f"{UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
-            {
-                "unit_number": 7,
-                "street_number": 67,
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT VALE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": TEST_COUNTRY,
-            },
+            TEST_ADDRESSES[0],
         ),
         (
-            "Basic AUS unit 2, ",
-            "80 ROSEBERRY STREET, ASCOT VALE" + ", VIC 3032",
+            "Basic AUS no unit, ",
+            f"{STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
             TEST_COUNTRY,
-            {
-                "unit_number": None,
-                "street_number": 80,
-                "street_name": "ROSEBERRY STREET",
-                "suburb": "ASCOT VALE",
-                "postcode": 3032,
-                "state": "VIC",
-                "country": TEST_COUNTRY,
-            },
+            TEST_ADDRESSES[0] | {"unit_number": None},
+        ),
+        (
+            "AUS needs stripping, ",
+            f" {UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0],
+        ),
+        (
+            "AUS Unit prefix, ",
+            f"UNIT {UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0],
+        ),
+        (
+            "AUS LOT prefix, ",
+            f"LOT {UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0],
+        ),
+        (
+            "AUS U prefix, ",
+            f"U{UNIT_NUMS[0]} {STREET_NUMS[0]}-44 {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0],
+        ),
+        (
+            "AUS G2 unit, ",
+            f"G2/{STREET_NUMS[0]}-44 {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0] | {"unit_number": "G2"},
+        ),
+        (
+            "AUS G2 unit with space, ",
+            f"G2 {STREET_NUMS[0]}-44 {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0] | {"unit_number": "G2"},
+        ),
+        (
+            "AUS space between unit and number, ",
+            f"{UNIT_NUMS[0]} {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0],
+        ),
+        (
+            "AUS with two units with '&', ",
+            f"6000 & {UNIT_NUMS[0]}/{STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0],
+        ),
+        # (  # FIXME: Unsure how to filter out 'AND' unless numbers either side. But then "12A AND 12B". How to split?
+        #     "AUS with two units with 'AND', ",
+        #     f"600 AND {UNIT_NUMS[0]}/{STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+        #     TEST_COUNTRY,
+        #     TEST_ADDRESSES[0],
+        # ),
+        (
+            "AUS full stop unit number, ",
+            f"1.{UNIT_NUMS[0]}, {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0] | {"unit_number": f"1{UNIT_NUMS[0]}"},
+        ),
+        (
+            "AUS full stop/ space & letter, ",
+            f"S1.{UNIT_NUMS[0]} {STREET_NUMS[0]} {STREET_NAMES[0]}, {TEST_SUBURB}, {TEST_STATE} {TEST_POSTCODE}",
+            TEST_COUNTRY,
+            TEST_ADDRESSES[0] | {"unit_number": f"S1{UNIT_NUMS[0]}"},
         ),
     ],
 )
@@ -112,6 +165,19 @@ def test_address_parsing(_name, address, country, correct_json):
 
     for field, value in address_model.model_dump().items():
         assert correct_json[field] == value
+
+
+def test_address_parsing_from_dict():
+    """Test creating address from string vs dict."""
+    address_parsed = Address.parse(TEST_ADDRESSES_STRING[0], country=TEST_COUNTRY)
+    address_kwargs = Address(**TEST_ADDRESSES[0])
+    assert address_parsed == address_kwargs
+    address_parsed = Address.parse(TEST_ADDRESSES_STRING[1], country=TEST_COUNTRY)
+    address_kwargs = Address(**TEST_ADDRESSES[1])
+    assert address_parsed == address_kwargs
+    address_parsed = Address.parse(TEST_ADDRESSES_STRING[2], country=TEST_COUNTRY)
+    address_kwargs = Address(**TEST_ADDRESSES[2])
+    assert address_parsed == address_kwargs
 
 
 ###### HISTORICAL PRICES ##############
@@ -143,7 +209,7 @@ def test_address_parsing(_name, address, country, correct_json):
         ),
     ],
 )
-def test_historical_price_init(_name, record_type, address, price, date):
+def test_price_record_init(_name, record_type, address, price, date):
     """Test HistoricalPrice class can be initialized."""
     PriceRecord(
         record_type=RecordType.parse(record_type) if isinstance(record_type, str) else record_type,
@@ -153,9 +219,9 @@ def test_historical_price_init(_name, record_type, address, price, date):
     )
 
 
-def test_historical_price_to_records():
+def test_price_record_to_records():
     """Takes a list of historical prices and converts them to a df."""
-    historical_prices = [
+    price_records = [
         PriceRecord(
             date=date(2020, 1, 1),
             record_type=RecordType.parse(RecordType.AUCTION),
@@ -175,11 +241,17 @@ def test_historical_price_to_records():
             price=200000,
         ),
     ]
-    historical_records = PriceRecord.to_records(historical_prices)
+    historical_records = PriceRecord.to_dataframe(price_records)
     records_json = {
-        "unit_number": [None, None, None],
-        "street_number": [80, 80, 80],
-        "street_name": ["FIFTH STREET", "SAMPLE STREET", "ROSEBERRY STREET"],
+        "address": {
+            "unit_number": [None, None, None],
+            "street_number": ["80", "80", "80"],
+            "street_name": ["FIFTH STREET", "SAMPLE STREET", "ROSEBERRY STREET"],
+            "suburb": ["ASCOT_VALE", "ASCOT_VALE", "NORTH_MELBOURNE"],
+            "postcode": 3032,
+            "state": "VIC",
+            "country": TEST_COUNTRY,
+        },
         "date": [date(2020, 1, 1), date(2020, 1, 1), date(2020, 1, 1)],
         "record_type": ["auction", "enquiry", "no_sale"],
         "price": [100000, None, 200000],
@@ -190,21 +262,21 @@ def test_historical_price_to_records():
     pl.testing.assert_frame_equal(historical_records, data_json, check_dtypes=False)
 
 
-def test_historical_price_read_csv(mock_price_records):
+def test_price_record_read_csv(mock_price_records):
     """Create csv contents and make sure the read function works."""
     data_csv = PriceRecord._read_csv(mock_price_records)
     data_json = pl.DataFrame(CORRECT_RECORDS_COMPRESSED_JSON)
     pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
 
 
-def test_historical_price_read(mock_price_records):  # noqa: ARG001
+def test_price_record_read(mock_price_records):  # noqa: ARG001
     """Create csv contents and make sure the read function works."""
     data_csv = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
     data_json = pl.DataFrame(CORRECT_RECORDS_JSON)
     pl.testing.assert_frame_equal(data_csv, data_json, check_dtypes=False)
 
 
-def test_historical_price_write(mock_price_records):
+def test_price_record_write(mock_price_records):
     """Test writing data writes the correct data."""
     data_csv = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
     os.remove(mock_price_records)
@@ -216,6 +288,18 @@ def test_historical_price_write(mock_price_records):
 
     data_json = pl.DataFrame(CORRECT_RECORDS_JSON)
     pl.testing.assert_frame_equal(data_re_read, data_json, check_dtypes=False)
+
+
+def test_price_records_to_frame(mock_price_records):  # noqa: ARG001
+    """Test converting list of PriceRecord into a frame."""
+    price_record_raw = PriceRecord.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+
+    price_record_list: list[PriceRecord] = []
+    for item in price_record_raw.to_dicts():
+        price_record_list.append(PriceRecord(**item))
+    price_record_frame = PriceRecord.to_dataframe(price_record_list)
+
+    pl.testing.assert_frame_equal(price_record_raw, price_record_frame)
 
 
 ####### PROPERTY INFO ############
@@ -335,6 +419,49 @@ def test_properties_info_write(mock_property_info):
     pl.testing.assert_frame_equal(
         properties_info_re_read.sort("floors"), properties_info_correct.sort("floors"), check_dtypes=False
     )
+
+
+def test_property_info_to_frame(mock_property_info):  # noqa: ARG001
+    """Test converting list of PropertyInfo into a frame."""
+    property_info_raw = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+
+    property_info_list: list[PropertyInfo] = []
+    for item in property_info_raw.to_dicts():
+        property_info_list.append(PropertyInfo.from_stringified_dict(item))
+    property_info_frame = PropertyInfo.to_dataframe(property_info_list)
+
+    pl.testing.assert_frame_equal(property_info_raw, property_info_frame)
+
+
+def test_property_info_unique(mock_property_info):  # noqa: ARG001
+    """Test taking unique property_info works."""
+    property_info_raw = PropertyInfo.read(country=TEST_COUNTRY, state=TEST_STATE, suburb=TEST_SUBURB)
+    duped_address_1 = property_info_raw["address"].item(0)
+    duped_address_2 = property_info_raw["address"].item(1)
+
+    first_half_of_duplicated = property_info_raw.filter(pl.col("address") == duped_address_1).with_columns(
+        pl.lit(None).alias("beds").cast(PROPERTIES_INFO_SCHEMA["beds"]),
+        pl.lit(None).alias("construction_date").cast(PROPERTIES_INFO_SCHEMA["construction_date"]),
+        pl.lit(None).alias("floors").cast(PROPERTIES_INFO_SCHEMA["floors"]),
+    )
+    second_half_of_duplicated = property_info_raw.filter(pl.col("address") == duped_address_1).with_columns(
+        pl.lit(None).alias("cars").cast(PROPERTIES_INFO_SCHEMA["cars"]),
+        pl.lit(None).alias("property_type").cast(PROPERTIES_INFO_SCHEMA["property_type"]),
+        pl.lit(None).alias("condition").cast(PROPERTIES_INFO_SCHEMA["condition"]),
+    )
+
+    property_info_with_duplicates = pl.concat(
+        [
+            first_half_of_duplicated,
+            second_half_of_duplicated,
+            property_info_raw.filter(pl.col("address") != duped_address_1),
+            property_info_raw.filter(pl.col("address") == duped_address_2),
+        ]
+    )
+
+    property_info_de_dupe = PropertyInfo.unique(property_infos=property_info_with_duplicates)
+
+    pl.testing.assert_frame_equal(property_info_raw.sort("address"), property_info_de_dupe.sort("address"))
 
 
 ##### INTEGRATION #############

@@ -1,6 +1,56 @@
+import datetime
 import re
 
 from property_models.constants import RecordType
+
+##### PARSE LAND ############
+
+
+def parse_land(land_size_str: str | None, /) -> float:
+    """Parse a land size string and return the numeric value in square meters.
+
+    E.g.
+    ```
+    '1920 Square Metres' -> 1920
+    '500' -> 500
+    '47.5' -> 47.5
+    '89.00' -> 89.00
+    '107 m2' -> 107
+    '500 sqm' -> 500
+    '96.5 sqm' -> 96.5
+    "176m2 approx." -> 176
+    '343 m2 (approx)' -> 343
+    ```
+    """
+    if land_size_str is None:
+        return None
+
+    match = re.search(r"(\d+(\.\d+)?)", land_size_str)
+
+    if match:
+        land_size = float(match.group(1))
+        return land_size
+
+    raise ValueError(f"Cannot parse land size: {land_size_str!r}")
+
+
+###### PARSE PRICES AND RECORD TYPES ##########
+
+
+def parse_date(date_raw: str) -> datetime.date:
+    """Parse a date.
+
+    E.g
+    ```
+    "March 2000" -> date(2000, 3, 1)
+    "July 2019" -> date(2019, 7, 1)
+    "December 2025" -> date(2025, 12, 1)
+    ```
+
+    """
+    date_clean = datetime.datetime.strptime(date_raw.strip(), "%B %Y").date()
+    return date_clean
+
 
 PRICE_PATTERN_SINGLE = r"^\$([\,\.\d]+)(\s[^\-]+|$)"
 PRICE_EXTRACTION_SINGLE = r"\1"
@@ -9,11 +59,7 @@ PRICE_EXTRACTION_RANGE_LOWER = r"\1"
 price_extraction_range_upper = r"\3"
 
 
-RECORD_TYPE_PATTERN = r"([\$\d\,\.\-\s]*)([a-zA-Z\s]+)"
-RECORD_TYPE_EXTRACTION = r"\2"
-
-
-def parse_price(price_info: str) -> float | None:
+def parse_price(price_info: str) -> int | None:
     """Takes a price as a string in and outputs a float.
 
     E.g.
@@ -28,16 +74,20 @@ def parse_price(price_info: str) -> float | None:
     ```
     """
     if (match := re.match(PRICE_PATTERN_SINGLE, price_info)) is not None:
-        price = float(match.expand(PRICE_EXTRACTION_SINGLE).replace(",", ""))
+        price = int(match.expand(PRICE_EXTRACTION_SINGLE).replace(",", ""))
 
     elif (match := re.match(PRICE_PATTERN_RANGE, price_info)) is not None:
-        lower_price = float(match.expand(PRICE_EXTRACTION_RANGE_LOWER).replace(",", ""))
-        upper_price = float(match.expand(price_extraction_range_upper).replace(",", ""))
-        price = (lower_price + upper_price) * 0.5
+        lower_price = int(match.expand(PRICE_EXTRACTION_RANGE_LOWER).replace(",", ""))
+        upper_price = int(match.expand(price_extraction_range_upper).replace(",", ""))
+        price = int((lower_price + upper_price) * 0.5)
     else:
         price = None
 
     return price
+
+
+RECORD_TYPE_PATTERN = r"([\$\d\,\.\-\s]*)([a-zA-Z\s]+)"
+RECORD_TYPE_EXTRACTION = r"\2"
 
 
 def parse_record_type(price_info: str) -> RecordType | None:

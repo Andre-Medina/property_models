@@ -109,3 +109,42 @@ def test_property_type_pydantic():
     TestModel(property_type=PropertyType(("land", "new_build")))
     with pytest.raises(ValidationError):
         TestModel(property_type=("land", "new_build"))
+
+
+def test_property_type_unique():
+    """Test `PropertyType.unique` works as expected."""
+    assert (
+        PropertyType.unique([PropertyType.APARTMENT.SIXTIES_BRICK.value, PropertyType.APARTMENT.SIXTIES_BRICK.value])
+        == PropertyType.APARTMENT.SIXTIES_BRICK.value
+    )
+
+    assert (
+        PropertyType.unique([PropertyType.APARTMENT.SIXTIES_BRICK.value, None])
+        == PropertyType.APARTMENT.SIXTIES_BRICK.value
+    )
+
+    assert PropertyType.unique([None, None]) is None
+
+
+def test_property_type_pase_tuples():
+    """Test `PropertyType.parse` works as expected on objects."""
+    assert PropertyType.parse(PropertyType.APARTMENT.GENERAL) == PropertyType.APARTMENT.GENERAL.value
+    assert PropertyType.parse(PropertyType.APARTMENT.GENERAL.value) == PropertyType.APARTMENT.GENERAL.value
+    assert PropertyType.parse(("land", "new_build")) == PropertyType.LAND.NEW_BUILD.value
+    assert PropertyType.parse(["land", "new_build"]) == PropertyType.LAND.NEW_BUILD.value
+    # assert PropertyType.parse('["land", "new_build"]') == PropertyType.LAND.NEW_BUILD.value
+
+
+def test_property_type_pase_strings():
+    """Test `PropertyType.parse` works as expected on strings."""
+    assert PropertyType.parse("unit/apmt") == PropertyType.APARTMENT.GENERAL.value
+    assert PropertyType.parse("apartment") == PropertyType.APARTMENT.GENERAL.value
+    assert PropertyType.parse("townhouse") == PropertyType.TOWN_HOUSE.GENERAL.value
+    assert PropertyType.parse("TOWNHOUSE") == PropertyType.TOWN_HOUSE.GENERAL.value
+    assert PropertyType.parse("LAND ") == PropertyType.LAND.GENERAL.value
+    assert PropertyType.parse("house") == PropertyType.FREE_STANDING_HOUSE.GENERAL.value
+    assert PropertyType.parse("   HouSE ") == PropertyType.FREE_STANDING_HOUSE.GENERAL.value
+    assert PropertyType.parse("sales_residential") is None
+    assert PropertyType.parse("Sales Residential") is None
+    assert PropertyType.parse("residential_sale") is None
+    assert PropertyType.parse(None) is None

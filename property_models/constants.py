@@ -3,7 +3,7 @@ from abc import abstractmethod
 from contextlib import suppress
 from enum import Enum
 from functools import lru_cache
-from typing import Literal
+from typing import Any, Literal
 
 import polars as pl
 
@@ -20,12 +20,26 @@ PROPERTIES_INFO_JSON_FILE: str = DATA_DIR + "/processed/{country}/{state}/{subur
 
 ALLOWED_COUNTRIES = Literal["AUS"]
 
+ERRORS = Literal["raise", "skip"]
+
 ####### SCHEMAS #######
 
-PRICE_RECORDS_SCHEMA = pl.Schema(
+ADDRESS_SCHEMA = pl.Schema(
     {
-        "unit_number": pl.UInt16,
-        "street_number": pl.UInt16,
+        "unit_number": pl.String,
+        "street_number": pl.String,
+        "street_name": pl.String,
+        "suburb": pl.String,
+        "postcode": pl.UInt16,
+        "state": pl.String,
+        "country": pl.String,
+    }
+)
+
+PRICE_RECORDS_COMPRESSED_SCHEMA = pl.Schema(
+    {
+        "unit_number": pl.String,
+        "street_number": pl.String,
         "street_name": pl.String,
         "date": pl.Date,
         "record_type": str,
@@ -33,15 +47,12 @@ PRICE_RECORDS_SCHEMA = pl.Schema(
     }
 )
 
-ADDRESS_SCHEMA = pl.Schema(
+PRICE_RECORDS_SCHEMA = pl.Schema(
     {
-        "unit_number": pl.UInt16,
-        "street_number": pl.UInt16,
-        "street_name": pl.String,
-        "suburb": pl.String,
-        "postcode": pl.UInt16,
-        "state": pl.String,
-        "country": pl.String,
+        "address": pl.Struct(ADDRESS_SCHEMA),
+        "date": pl.Date,
+        "record_type": str,
+        "price": pl.UInt32,
     }
 )
 
@@ -238,7 +249,7 @@ class PropertyType(tuple[str, str]):
         return sub_enum_lookup
 
     @classmethod
-    def parse(cls, property_type: str, *, errors: Literal["raise", "coerce", "null"] = "raise") -> "PropertyType":  # noqa: ARG003
+    def parse(cls, property_type: Any, *, errors: Literal["raise", "coerce", "null"] = "raise") -> "PropertyType":  # noqa: ARG003, PLR0911
         """Takes a string and converts it into an enum.
 
         Parameters
@@ -256,11 +267,43 @@ class PropertyType(tuple[str, str]):
         ValueError, If bad value is passed.
         NotImplementedError, If called with un implemented parameters.
         """
-        try:
+        if property_type is None:
+            return None
+
+        with suppress(Exception):
+            parsed = cls(property_type)
+            return parsed
+
+        with suppress(AttributeError):
             parsed = cls(property_type.value)
             return parsed
-        except Exception:  # noqa: B904
-            raise NotImplementedError  # noqa: B904
+        property_type_clean = property_type.lower().strip().replace(" ", "_")
+
+        # if ('unit' in property_type_clean) | ("apmt" in property_type):
+        if property_type_clean in ["unit/apmt", "apartment"]:
+            return cls.APARTMENT.GENERAL.value
+        if property_type_clean == "townhouse":
+            return cls.TOWN_HOUSE.GENERAL.value
+        if property_type_clean == "house":
+            return cls.FREE_STANDING_HOUSE.GENERAL.value
+        if property_type_clean == "land":
+            return cls.LAND.GENERAL.value
+        if property_type_clean in ["sales_residential", "residential_sale"]:
+            return None
+
+        raise NotImplementedError(f"cannot process land type: {property_type_clean!r}")
+
+    @classmethod
+    def unique(cls, property_types_: list["PropertyType"], /) -> "PropertyType":
+        """Take a list of potential property types and finds the unique type."""
+        property_types = [cls(property_type) for property_type in property_types_ if property_type is not None]
+
+        if len((unique_property_type := set(property_types)) - {None}) == 1:
+            return list(unique_property_type)[0]
+        if len(unique_property_type) <= 1:
+            return None
+
+        raise NotImplementedError(f"Cannot determine the unique type from '{property_types_}'")
 
 
 #### Property condition #########
